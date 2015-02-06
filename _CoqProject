@@ -6,3 +6,4 @@ src/representation/properties.v
 src/operations.v
 src/operations/properties.v
 src/bits.v
+src/integers.v

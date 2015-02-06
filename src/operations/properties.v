@@ -1216,7 +1216,7 @@ rewrite -(addnBA _ P) divnDl; last done. rewrite divnn POS odd_add/=.
 rewrite negbK.
 assert (toNat p1 - toNat p2 < 2^n).
 assert (H := leq_subr (toNat p2) (toNat p1)).
-apply: leq_ltn_trans; first by exact: (toNat p1). apply H.  done. rewrite (divn_small H). done.
+apply: leq_ltn_trans (*; first by exact: (toNat p1) *). apply H.  done. rewrite (divn_small H). done.
 rewrite -(leq_add2r 1).
 rewrite !addn1 prednK. done. apply expn_gt0.
 Qed.

@@ -1,9 +1,10 @@
 -R src Bits
 src/nat.v
 src/tuple.v
-src/representation.v
-src/representation/properties.v
-src/operations.v
-src/operations/properties.v
+src/repr.v
+src/spec.v
+src/spec/properties.v
+src/spec/operations.v
+src/spec/operations/properties.v
 src/bits.v
 src/integers.v

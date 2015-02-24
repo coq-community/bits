@@ -1,10 +1,12 @@
  (*===========================================================================
   Proofs of properties of arithmetic and logical operations on n-bit words
   ===========================================================================*)
+From Coq
+    Require Import ZArith.ZArith.
 From Ssreflect
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple zmodp fintype div.
 Require Import tuple nat.
-Require Import spec spec.properties spec.operations.
+Require Import spec spec.notation spec.properties spec.operations.
 
 Set Implicit Arguments.
 Unset Strict Implicit.

@@ -56,3 +56,5 @@ Fixpoint lastn {T} n {n2} : (n2+n).-tuple T -> n.-tuple T :=
 Fixpoint firstn {T} {n1} n : (n+n1).-tuple T -> n.-tuple T :=
   if n is _.+1 return (n+n1).-tuple T -> n.-tuple T
   then fun p => cons_tuple (thead p) (firstn _ (behead_tuple p)) else fun p => nil_tuple _.
+
+

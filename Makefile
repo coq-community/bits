@@ -96,6 +96,7 @@ VFILES:=src/integers.v\
   src/spec/operations/properties.v\
   src/spec/operations.v\
   src/spec/properties.v\
+  src/spec/notation.v\
   src/spec.v\
   src/repr.v\
   src/tuple.v\

@@ -3,13 +3,113 @@
   For proofs of properties of operations see bitsopsprops.v
   ===========================================================================*)
 
+From Coq
+     Require Import ZArith.ZArith.
 From Ssreflect
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple.
-Require Import spec.
+Require Import spec spec.notation.
 
 Set Implicit Arguments.
-Unset Strict Implicit.
-Import Prenex Implicits.
+
+
+
+
+
+
+(*---------------------------------------------------------------------------
+    Concatenation and splitting of bit strings
+  ---------------------------------------------------------------------------*)
+
+
+
+(* Sign extend by {extra} bits *)
+Definition signExtend extra {n} (p: BITS n.+1) := copy extra (msb p) ## p.
+
+(* Truncate a signed integer by {extra} bits; return None if this would overflow *)
+Definition signTruncate extra {n} (p: BITS (n.+1 + extra)) : option (BITS n.+1) :=
+  let (hi,lo) := split2 extra _ p in
+  if msb lo && (hi == ones _) || negb (msb lo) && (hi == zero _)
+  then Some lo
+  else None.
+
+(* Zero extend by {extra} bits *)
+Definition zeroExtend extra {n} (p: BITS n) := zero extra ## p.
+(*
+Coercion DWORDtoQWORD := zeroExtend (n:=32) 32 : DWORD -> QWORD. 
+Coercion WORDtoDWORD := zeroExtend (n:=16) 16 : WORD -> DWORD.
+Coercion BYTEtoDWORD := zeroExtend (n:=8) 24 : BYTE -> DWORD.
+*)
+
+(* Take m least significant bits of n-bit argument and fill with zeros if m>n *)
+Fixpoint lowWithZeroExtend m {n} : BITS n -> BITS m :=
+  if n is _.+1
+  then fun p => let (p,b) := splitlsb p in
+                if m is m'.+1 then joinlsb (@lowWithZeroExtend m' _ p, b)
+                else zero 0
+  else fun p => zero m.
+
+(* Truncate an unsigned integer by {extra} bits; return None if this would overflow *)
+Definition zeroTruncate extra {n} (p: BITS (n + extra)) : option (BITS n) :=
+  let (hi,lo) := split2 extra _ p in
+  if hi == zero _ then Some lo else None.
+
+Fixpoint zeroExtendAux extra {n} (p: BITS n) : BITS (extra+n) :=
+  if extra is e.+1 then joinmsb0 (zeroExtendAux e p) else p.
+
+
+Notation "y ## x" := (catB y x) (right associativity, at level 60).
+
+(* Slice of bits *)
+(*
+Definition slice n n1 n2 (p: BITS (n+(n1+n2))) := low n1 (high (n1+n2) p).
+*)
+
+Definition slice n n1 n2 (p: BITS (n+n1+n2)) : BITS n1 :=
+  let: (a,b,c) := split3 n2 n1 n p in b. 
+
+Definition updateSlice n n1 n2 (p: BITS (n+n1+n2)) (m:BITS n1) : BITS (n+n1+n2) :=
+  let: (a,b,c) := split3 n2 n1 n p in a ## m ## c.
+
+(* Little-endian conversion of n-tuples of bytes (first component is least significant)
+   into BITS (n*8) *)
+Fixpoint seqBytesToBits (xs : seq BYTE) : BITS (size xs*8) :=
+  if xs is x::xs' return BITS (size xs*8) then seqBytesToBits xs' ## x
+  else nilB.
+
+Fixpoint bytesToBits {n} : (n.-tuple BYTE) -> BITS (n*8) :=
+  if n is n'.+1 return n.-tuple BYTE -> BITS (n*8) 
+  then fun xs => bytesToBits (behead_tuple xs) ## (thead xs)
+  else fun xs => nilB.
+
+Definition splitAtByte n (bits : BITS ((n.+1)*8)) :BITS (n*8) * BYTE := (split2 (n*8) 8 bits).
+
+Fixpoint bitsToBytes n : BITS (n*8) -> n.-tuple BYTE :=
+  if n is n'.+1 return BITS (n*8) -> n.-tuple BYTE
+  then fun xs => 
+    let (hi,lo) := splitAtByte xs in cons_tuple lo (bitsToBytes _ hi)
+  else fun xs => nil_tuple _. 
+
+(*---------------------------------------------------------------------------
+    Single bit operations
+  ---------------------------------------------------------------------------*)
+
+(* Booleans are implicitly coerced to one-bit words, useful in combination with ## *)
+Coercion singleBit b : BITS 1 := joinlsb (nilB, b).
+
+(* Get bit i, counting 0 as least significant *)
+(* For some reason tnth is not efficiently computable, so we use nth *)
+Definition getBit {n} (p: BITS n) (i:nat) := nth false p i.
+
+(* Set bit i to b *)
+Fixpoint setBitAux {n} i b : BITS n -> BITS n :=
+  if n is _.+1
+  then fun p => let (p,oldb) := splitlsb p in
+                if i is i'.+1 then joinlsb (setBitAux i' b p, oldb) else joinlsb (p,b)
+  else fun p => nilB.
+
+Definition setBit {n} (p: BITS n) i b := setBitAux i b p.
+
+
 
 (*---------------------------------------------------------------------------
     Increment and decrement operations
@@ -76,6 +176,7 @@ Notation addB p1 p2 := (adcB false p1 p2).2.
 (* Take a page from ssreflect's book of ssrfun *)
 Notation "@ 'addB' n" := (fun p1 p2 : BITS n => addB p1 p2)
   (at level 10, n at level 8, only parsing) : fun_scope.
+Notation "b +# n" := (addB b #n) (at level 50, left associativity).
 
 (*(** Don't simpl unless everything is a constructor. *)
 Global Arguments adcB {!n} !carry !p1 !p2 / .*)
@@ -91,8 +192,6 @@ Definition computeOverflow n (arg1 arg2 res: BITS n) :=
   | (true,true,false) | (false,false,true) => true | _ => false
   end.
 
-(* Some handy notation *)
-Notation "b +# n" := (addB b #n) (at level 50, left associativity).
 
 (*---------------------------------------------------------------------------
     Subtraction
@@ -105,12 +204,12 @@ Notation carry_subB p1 p2 := (sbbB false p1 p2).1.
 Notation subB p1 p2 := (sbbB false p1 p2).2.
 Notation "@ 'subB' n" := (fun p1 p2 : BITS n => subB p1 p2)
   (at level 10, n at level 8, only parsing) : fun_scope.
+Notation "b -# n" := (subB b #n) (at level 50, left associativity).
 
 (** Don't ever simpl [sbbB]. *)
 (*Global Arguments sbbB {!n} !borrow !arg1 !arg2 / .*)
 Global Opaque sbbB.
 
-Notation "b -# n" := (subB b #n) (at level 50, left associativity).
 
 (*---------------------------------------------------------------------------
     Unsigned comparison

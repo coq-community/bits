@@ -2,6 +2,9 @@
 src/nat.v
 src/tuple.v
 src/repr.v
+src/repr/operations.v
+src/repr/properties.v
+src/repr/refinement.v
 src/spec.v
 src/spec/notation.v
 src/spec/properties.v

@@ -5,6 +5,8 @@ From Ssreflect
                     ssrnat seq tuple fintype zmodp.
 Require Import spec.
 
+Open Scope N_scope.
+
 (*---------------------------------------------------------------------------
     Efficient conversion to and from signed numbers (Z)
   ---------------------------------------------------------------------------*)
@@ -62,6 +64,17 @@ Lemma N_of_BITS_eqP  {n} (bs1 bs2: BITS n):
 Proof.
   admit.
 Qed.
+
+Lemma N_of_BITS_bounded {n}(bs: BITS n):
+  N_of_BITS bs < 2 ^ N.of_nat n.
+Proof.
+  admit.
+Qed.
+
+Lemma N_of_BITSCons:
+  forall n b (bs: BITS n), N_of_BITS [tuple of b :: bs] = consN b (N_of_BITS bs).
+Proof. move=> n b //=. Qed.
+
 
 Fixpoint BITS_of_N {n} (m: N): BITS n :=
   if n is _.+1

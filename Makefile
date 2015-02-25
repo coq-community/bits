@@ -98,6 +98,9 @@ VFILES:=src/integers.v\
   src/spec/properties.v\
   src/spec/notation.v\
   src/spec.v\
+  src/repr/refinement.v\
+  src/repr/properties.v\
+  src/repr/operations.v\
   src/repr.v\
   src/tuple.v\
   src/nat.v

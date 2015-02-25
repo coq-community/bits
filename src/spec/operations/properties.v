@@ -6,6 +6,7 @@ From Coq
 From Ssreflect
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple zmodp fintype div.
 Require Import tuple nat.
+Require Import repr repr.refinement.
 Require Import spec spec.notation spec.properties spec.operations.
 
 Set Implicit Arguments.
@@ -99,22 +100,22 @@ Lemma orBA n : associative (orB (n:=n)).
 Proof. by apply lift_associative; do !elim. Qed.
 
 Lemma or0B n : left_id #0 (orB (n:=n)).
-Proof. by rewrite fromNat0; apply lift_left_id; do !elim. Qed.
+Proof. by rewrite zero_E'; apply lift_left_id; do !elim. Qed.
 
 Lemma orB0 n : right_id #0 (orB (n:=n)).
-Proof. by rewrite fromNat0; apply lift_right_id; do !elim. Qed.
+Proof. by rewrite zero_E'; apply lift_right_id; do !elim. Qed.
 
 Lemma and0B n : left_zero #0 (andB (n:=n)).
-Proof. by rewrite fromNat0; apply lift_left_zero; do !elim. Qed.
+Proof. by rewrite zero_E'; apply lift_left_zero; do !elim. Qed.
 
 Lemma andB0 n : right_zero #0 (andB (n:=n)).
-Proof. by rewrite fromNat0; apply lift_right_zero; do !elim. Qed.
+Proof. by rewrite zero_E'; apply lift_right_zero; do !elim. Qed.
 
 Lemma xor0B n : left_id #0 (xorB (n:=n)).
-Proof. by rewrite fromNat0; apply lift_left_id; do !elim. Qed.
+Proof. by rewrite zero_E'; apply lift_left_id; do !elim. Qed.
 
 Lemma xorB0 n : right_id #0 (xorB (n:=n)).
-Proof. by rewrite fromNat0; apply lift_right_id; do !elim. Qed.
+Proof. by rewrite zero_E'; apply lift_right_id; do !elim. Qed.
 
 Lemma xorBB n : forall x, xorB (n:=n) x x = #0.
 Proof. by rewrite /xorB; lift_op_t n. Qed.
@@ -142,74 +143,18 @@ Lemma bitsEq_decomp n b1 b2 (p1 p2: BITS n) :
 Proof. done. Qed.
 
 
-(* First, with respect to conversions *)
-Lemma toNat_incB n : forall (p: BITS n), toNat (incB p) = if p == ones _ then 0 else (toNat p).+1.
-Proof. induction n.
-+ move => p. by rewrite (tuple0 p).
-+ case/tupleP => [b p].
-rewrite /= theadCons beheadCons toNatCons.
-destruct b => //.
-rewrite toNat_joinlsb add0n add1n IHn.
-case E: (p == ones n).
-+ by replace (_ == _) with true.
-+ by rewrite ones_decomp/= bitsEq_decomp doubleS E.
-Qed.
 
-Lemma toNatMod_incB n (p: BITS n) : toNat (incB p) = (toNat p).+1 %[mod 2^n].
-Proof. rewrite toNat_incB.
-case E: (p == ones n) => //.
-by rewrite (eqP E) toNat_ones_succ modnn mod0n.
-Qed.
-
-Lemma toNat_decB_succ n : forall (p: BITS n), (toNat (decB p)).+1 = if p == #0 then 2^n else toNat p.
-Proof. induction n.
-+ move => p. by rewrite (tuple0 p).
-+ case/tupleP => [b p].
-rewrite /=theadCons beheadCons toNatCons.
-destruct b => //.
-rewrite toNat_joinlsb add0n.
-specialize (IHn p).
-case E: (p == #0) => //.
-+ rewrite (eqP E). rewrite (eqP E) eq_refl in IHn. rewrite expnS. rewrite -IHn.
-  replace (_ == _) with true. by rewrite add1n mul2n doubleS.
-  rewrite /fromNat-/fromNat/=/joinlsb. simpl. by rewrite eq_refl.
-+ replace (_ == _) with false. rewrite E in IHn. rewrite -IHn.
-  rewrite doubleS. by rewrite add1n.
-Qed.
-
-Lemma toNat_decB n (p: BITS n) : toNat (decB p) = (if p == #0 then 2^n else toNat p).-1.
-Proof. by rewrite -toNat_decB_succ succnK. Qed.
-
-Lemma nonZeroIsSucc n (p: BITS n) : p != #0 -> exists m, toNat p = m.+1.
-Proof. move => H.
-case E: (toNat p) => [| n'].
-+ rewrite -(toNatK p) in H. by rewrite E fromNat0 eq_refl in H.
-+ by exists n'.
-Qed.
-
-Lemma toNatMod_decB n (p: BITS n) : toNat (decB p) = (toNat p + (2^n).-1) %[mod 2^n].
-Proof. rewrite toNat_decB.
-case E: (p == #0) => //.
-+ rewrite (eqP E) {E}. by rewrite toNat_fromNat0 add0n.
-+ apply negbT in E. destruct (nonZeroIsSucc E) as [m E']. rewrite E'. rewrite succnK.
-rewrite -!subn1. rewrite addnBA. rewrite addnC. rewrite -addnBA => //.
-rewrite subn1 succnK. by rewrite modnDl.
-apply expn_gt0.
-Qed.
-
-Lemma fromNatDouble b n : forall m, cons_tuple b (fromNat (n:=n) m) = fromNat (b + m.*2).
-Proof. move => m. rewrite /fromNat-/fromNat/=. rewrite odd_add odd_double.
-destruct b. simpl. by rewrite uphalf_double.
-by rewrite add0n half_double.
-Qed.
-
-Require Import Ssreflect.ssralg.
-Import GRing.Theory.
 
 (*---------------------------------------------------------------------------
     All operations in BITS n (for n>0) have corresponding operations
     in 'Z_(2^n).
   ---------------------------------------------------------------------------*)
+
+(* TODO: how to recover these proofs? *)
+
+(*
+Require Import Ssreflect.ssralg.
+Import GRing.Theory.
 
 Lemma toZp_incB n (p:BITS n.+1) : toZp (incB p) = (toZp p + 1)%R.
 Proof. apply val_inj. rewrite /= Zp_cast; last apply pow2_gt1.
@@ -284,6 +229,7 @@ apply toZp_inj. autorewrite with ZpHom.
 rewrite -(addn1 m) GRing.natrD.
 by rewrite GRing.addrK.
 Qed.
+*)
 
 (*---------------------------------------------------------------------------
     Properties of inversion (one's complement)
@@ -292,77 +238,8 @@ Qed.
 Lemma invBCons n b (p: BITS n) : invB (cons_tuple b p) = cons_tuple (negb b) (invB p).
 Proof. rewrite /invB. by rewrite liftUnOpCons. Qed.
 
-Lemma negB_or_invB_fromNat n : forall m, m < 2^n ->
-   negB (n:=n) #m = #(2^n - m)
-/\ invB (n:=n) #m = #((2^n).-1 - m).
-Proof. induction n. split; [done | apply trivialBits].
-move => m H.
-rewrite expnS mul2n in H. pose H' := half_ltn_double H. elim (IHn _ H') => [IH1 IH2] {IHn}.
-split.
-+
-rewrite /negB.
-rewrite /fromNat-/fromNat. rewrite invBCons IH2 /=!theadCons!beheadCons.
-rewrite odd_sub. rewrite odd_power2/=.
-case ODD: (odd m).
-- rewrite expnS mul2n. rewrite half_sub.
-  rewrite uphalf_half ODD -subn1 subnDA. done. apply (ltnW H).
-- rewrite incB_fromNat.
-  rewrite expnS mul2n half_sub.
-  rewrite uphalf_half ODD add0n.
-  rewrite -subn1. rewrite subnAC. rewrite subn1. rewrite prednK.  done.
-  by rewrite subn_gt0.
-  apply (ltnW H).
-- rewrite expnS mul2n. apply (ltnW H).
-rewrite /fromNat-/fromNat invBCons IH2. rewrite odd_sub/=.
-rewrite odd_power2subn1/=. rewrite -!subn1 -!subnDA expnS mul2n.
-rewrite half_sub. done. apply H.
-rewrite expnS mul2n. apply leq_subn; last done. rewrite -mul2n -expnS. apply expn_gt0.
-Qed.
-
-Corollary negB_fromNat n m : m < 2^n -> negB (n:=n) #m = #(2^n - m).
-Proof. apply negB_or_invB_fromNat. Qed.
-
-Corollary invB_fromNat n m : m < 2^n -> invB (n:=n) #m = #((2^n).-1 - m).
-Proof. apply negB_or_invB_fromNat. Qed.
-
-Lemma toNat_negB_or_invB n : forall (p: BITS n),
-   (toNat (negB p) = if toNat p == 0 then 0 else 2^n - toNat p)
-/\ (toNat (invB p) = (2^n).-1 - toNat p).
-Proof. induction n. move => p. by rewrite (tuple0 p)/toNat/=.
-case/tupleP => [b p]. rewrite /negB !invBCons!toNatCons/=!theadCons!beheadCons.
-elim (IHn p) => [IH1 IH2]. split. case b.
-+ simpl. rewrite toNatCons IH2.
-  rewrite doubleB expnS mul2n. rewrite -subn1 doubleB/=.
-  rewrite add1n. rewrite -!mul2n. rewrite muln1. rewrite subnAC. rewrite subn2.
-  rewrite subnDA.  rewrite subnAC. rewrite prednK. by rewrite subn1.
-  assert (B:=toNatBounded p). rewrite !mul2n -doubleB.
-  rewrite -subn1. rewrite subn_gt0. rewrite -subn_gt0 in B. rewrite -half_gt0.
-  rewrite doubleK. done.
-
-+ simpl. rewrite toNatCons. rewrite !add0n.
-rewrite /negB in IH1. rewrite IH1.
-  case E: (toNat p) => [| n']. done.
-  simpl. rewrite doubleB expnS -muln2 mulnC. done.
-
-case b.
-+ simpl. rewrite add0n. rewrite IH2. rewrite expnS. rewrite -!subn1 !doubleB.
-  rewrite -!muln2. rewrite mul1n subnDA. rewrite mulnC. rewrite !subn1 subn2. done.
-+ simpl. rewrite add0n. rewrite IH2. rewrite expnS. rewrite -!subn1 !doubleB.
-  rewrite -!muln2. rewrite mul1n. rewrite add1n. rewrite subnAC. rewrite mulnC.
-  rewrite subn2.
-  assert (B:0 < (2*2^n - toNat p * 2).-1).
-  assert (B':=toNatBounded p). rewrite mul2n muln2. rewrite -doubleB.
-  rewrite -subn_gt0 in B'.  rewrite -subn1 subn_gt0 -half_gt0 doubleK. done.
-  rewrite (ltn_predK B). rewrite -subn1. by rewrite subnAC.
-Qed.
-
-Corollary toNat_invB n (p: BITS n) : toNat (invB p) = (2^n).-1 - toNat p.
-Proof. apply toNat_negB_or_invB. Qed.
-
-Corollary toNat_negB n (p: BITS n) : toNat (negB p) =
-  if toNat p == 0 then 0 else 2^n - toNat p.
-Proof. apply toNat_negB_or_invB. Qed.
-
+(* TODO: Do we keep embedding to Zp? *)
+(*
 (* There must be an easier way to prove this! *)
 Lemma toZp_invB n (p:BITS n.+1) : toZp (invB p) = (-toZp p - 1)%R.
 Proof. apply val_inj.
@@ -400,11 +277,14 @@ rewrite -subn1. rewrite natr_sub.
 rewrite natr_sub; last apply expn_gt0. rewrite addrAC.
 done. rewrite oppr_sub. subrCA. rewrite modZp. done.  simpl. . done. => //. rewrite subrr. _sub. rewrite -Zp_opp.  rewrapply apply negB_or_invB_fromNat. Qed.
 *)
+*)
 
 (*---------------------------------------------------------------------------
     Properties of negation (two's complement)
   ---------------------------------------------------------------------------*)
 
+(* TODO: Do we keep embedding to Zp? *)
+(*
 Lemma toZp_negB n (p:BITS n.+1) : toZp (negB p) = (-toZp p)%R.
 Proof. apply val_inj. rewrite /= Zp_cast; last apply pow2_gt1.
 rewrite toNat_negB.
@@ -438,6 +318,7 @@ Proof. destruct n; first apply trivialBits.
 apply toZp_inj. autorewrite with ZpHom.
 by rewrite oppr0.
 Qed.
+*)
 
 (*---------------------------------------------------------------------------
     Properties of addition
@@ -446,43 +327,8 @@ Qed.
 Lemma fullAdderTT c : fullAdder c true true = (true,c).
 Proof. by destruct c. Qed.
 
-Lemma adcBmain_nat n : forall b (p1 p2: BITS n), adcBmain b p1 p2 = #(b + toNat p1 + toNat p2).
-Proof.
-induction n.
-+ move => b p1 p2. rewrite 2!toNatNil. by destruct b.
-+ move => b. case/tupleP => [b1 p1]. case/tupleP => [b2 p2].
-  rewrite /fromNat-/fromNat/=.
-  rewrite !theadCons !beheadCons !toNatCons !odd_add !odd_double /=.
-  case e: (fullAdder b b1 b2) => [carry' b0].
-  specialize (IHn carry' p1 p2). rewrite IHn /= addnA.
-  assert (b0 = odd b (+) (odd b1 (+) false) (+) (odd b2 (+) false)).
-  rewrite /fullAdder in e. destruct b; destruct b1; destruct b2; inversion e; subst; done.
-  rewrite -H.
-  assert (carry' + toNat p1 + toNat p2 =
-          (b + (b1 + (toNat p1).*2) + b2 + (toNat p2).*2)./2).
-  rewrite addnA (addnC _ b2) -!addnA -doubleD !addnA.
-  rewrite /fullAdder in e. destruct b; destruct b1; destruct b2; inversion e; subst; simpl;
-  by (try rewrite uphalf_double; try rewrite half_double).
-  rewrite H0. by apply val_inj.
-Qed.
-
-Lemma adcB_bounded n (b:bool) (p1 p2: BITS n) : b + toNat p1 + toNat p2 < 2^n.+1.
-Proof.
-have B1 := toNatBounded p1.
-have B2 := toNatBounded p2.
-rewrite expnS mul2n -addnn.
-have B :=leq_add B1 B2.
-destruct b.
-+ rewrite addnC add1n -addn1 addnC addnA add1n. apply leq_add; done.
-+ rewrite add0n -addn1 addnC addnA add1n. apply leq_add; first done. by rewrite ltnW.
-Qed.
-
-Corollary toNat_adcBmain n b (p1 p2: BITS n) : toNat (adcBmain b p1 p2) = b + toNat p1 + toNat p2.
-Proof.
-rewrite adcBmain_nat. rewrite toNat_fromNatBounded => //.
-apply adcB_bounded.
-Qed.
-
+(* TODO: Do we keep embedding to Zp? *)
+(*
 Lemma toZp_adcB n b (p1 p2:BITS n) :
   toZp (adcBmain b p1 p2) = (bool_inZp _ b + toZpAux p1 + toZpAux p2)%R.
 Proof.
@@ -500,10 +346,10 @@ apply: leq_ltn_trans BOUND. rewrite addnC. apply leq_addr.
 apply: leq_ltn_trans BOUND. rewrite -addnAC. apply leq_addl.
 apply: leq_ltn_trans BOUND. rewrite -addnA. apply leq_addr.
 Qed.
+*)
 
-Corollary toNat_addB n (p1 p2: BITS n) : toNat (addB p1 p2) = (toNat p1 + toNat p2) %% 2^n.
-Proof. by rewrite toNat_dropmsb toNat_adcBmain add0n. Qed.
-
+(* TODO: Do we keep embedding to Zp? *)
+(*
 Corollary toZp_addB n (p1 p2: BITS n.+1) : toZp (addB p1 p2) = (toZp p1 + toZp p2)%R.
 Proof. apply val_inj. rewrite /toZp. rewrite toNat_addB.
 rewrite /= Zp_cast; last apply pow2_gt1.
@@ -557,10 +403,9 @@ Proof. move => x. destruct n; first apply trivialBits.
 apply toZp_inj. autorewrite with ZpHom.
 by rewrite addr0.
 Qed.
+*)
 
-Lemma fromNat_addBn n m1 m2 : #m1 +# m2 = fromNat (n:=n) (m1 + m2).
-Proof. apply toNat_inj. rewrite toNat_addB !toNat_fromNat. by rewrite modnDm. Qed.
-
+(*
 Lemma addB_addn n (p:BITS n) m1 m2 : p +# (m1+m2) = p +# m1 +# m2.
 Proof. destruct n; first apply trivialBits.
 apply toZp_inj. autorewrite with ZpHom.
@@ -618,6 +463,7 @@ Qed.
 
 Corollary addIsIterInc n (p:BITS n) m : p +# m = iter m incB p.
 Proof. rewrite /adcB. apply adcIsIterInc. Qed.
+*)
 
 (*---------------------------------------------------------------------------
     Properties of subtraction
@@ -628,6 +474,8 @@ Proof. rewrite /dropmsb/sbbB/adcB. simpl (~~false).
 case (splitmsb (adcBmain true p (invB q))) => //.
 Qed.
 
+(* TODO: Do we keep embedding to Zp? *)
+(*
 Lemma toZp_subB n (p q: BITS n.+1) : toZp (subB p q) = (toZp p - toZp q)%R.
 Proof. rewrite subB_is_dropmsb_adcB_invB.
 apply val_inj. rewrite toZp_dropmsb /toZpAux.
@@ -697,7 +545,8 @@ Proof. destruct n; first apply trivialBits.
 apply toZp_inj. autorewrite with ZpHom.
 by rewrite subrr.
 Qed.
-
+*)
+(*
 Lemma toNat_addBn n : forall (p: BITS n) m, toNat (p +# m) = (toNat p + m) %% 2^n.
 Proof. move => p m.
 rewrite /adcB adcBmain_nat add0n. rewrite splitmsb_fromNat.
@@ -843,41 +692,13 @@ apply toZp_inj.
 rewrite toZp_addB toZp_subB.
 by rewrite addrCA addrN addr0.
 Qed.
-
+*)
 
 (*---------------------------------------------------------------------------
     Properties of unsigned comparison
   ---------------------------------------------------------------------------*)
 
-
-Lemma ltB_nat n : forall p1 p2: BITS n, ltB p1 p2 = (toNat p1 < toNat p2).
-Proof.
-induction n. move => p1 p2. by rewrite (tuple0 p1) (tuple0 p2).
-move => p1 p2. case/tupleP: p1 => [b1 q1]. case/tupleP: p2  => [b2 q2].
-rewrite 2!toNatCons /= !beheadCons !theadCons IHn.
-case E: (toNat q1 < toNat q2). simpl.
-case b1; case b2; simpl.
-+ by rewrite ltn_add2l ltn_double.
-+ by rewrite add0n addnC addn1 ltn_Sdouble.
-+ by rewrite add0n addnC addn1 ltnS leq_double ltnW.
-+ by rewrite !add0n ltn_double.
-case b1; case b2; simpl.
-+ rewrite ltn_add2l ltn_double E. by rewrite andbF.
-+ rewrite add0n addnC addn1 ltn_Sdouble E. by rewrite andbF.
-+ rewrite add0n addnC addn1 ltnS leq_double. rewrite !andbT.
-rewrite leq_eqVlt E. rewrite orbF.
-apply bitsEq_nat.
-+ rewrite !add0n ltn_double E. by rewrite andbF.
-Qed.
-
-Lemma leB_nat n (p1 p2: BITS n) : leB p1 p2 = (toNat p1 <= toNat p2).
-Proof.
-rewrite /leB.
-rewrite ltB_nat.
-rewrite bitsEq_nat. rewrite orbC.
-by rewrite (leq_eqVlt (toNat p1)).
-Qed.
-
+(*
 
 Lemma ltB_bound n (p q: BITS n) : ltB p q -> toNat p < (2^n).-1.
 Proof. rewrite ltB_nat. have B:= toNatBounded q.
@@ -1012,10 +833,12 @@ case E: (q == #0).
   rewrite addn1. rewrite modn_small => //.
   have B:= toNatBounded q. by apply (ltn_trans E2).
 Qed.
+*)
 
 (*---------------------------------------------------------------------------
     Relationship of ltB/leB with addition
   ---------------------------------------------------------------------------*)
+(*
 Lemma ltBleB_joinmsb0_adcB n : forall c (p1 p2: BITS n),
   if c then ltB (joinmsb0 p1) (adcBmain c p1 p2) else leB (joinmsb0 p1) (adcBmain c p1 p2).
 Proof.
@@ -1222,61 +1045,13 @@ apply: leq_ltn_trans; first by exact: (toNat p1). apply H.  done. rewrite (divn_
 rewrite -(leq_add2r 1).
 rewrite !addn1 prednK. done. apply expn_gt0.
 Qed.
-
-Lemma toNat_subB n (p q: BITS n) : leB q p -> toNat (subB p q) = toNat p - toNat q.
-Proof. move => LE.
-have P := toNatBounded p.
-have Q := toNatBounded q.
-case E: (p == q). rewrite (eqP E). by rewrite subBB toNat_fromNat0 subnn.
-rewrite subB_equiv_addB_negB.
-rewrite toNat_addB.
-rewrite toNat_negB.
-case E': (toNat q == 0). rewrite (eqP E') subn0 addn0.
-rewrite modn_small //.
-rewrite addnBA; last first. apply ltnW => //.
-rewrite addnC. rewrite -addnBA. rewrite modnDl. rewrite modn_small => //.
-have H : (toNat p - toNat q <= toNat p) by apply leq_subr.
-apply: leq_ltn_trans H P.
-by rewrite leB_nat in LE.
-Qed.
+*)
 
 (*---------------------------------------------------------------------------
     Shifts and rotates
   ---------------------------------------------------------------------------*)
-Lemma toNat_shrB n : forall (p: BITS n), toNat (shrB p) = (toNat p)./2.
-Proof. destruct n. move => p. by rewrite (tuple0 p).
-case/tupleP => [b p].
-by rewrite /shrB toNat_joinmsb0 /droplsb/splitlsb beheadCons theadCons toNatCons half_bit_double.
-Qed.
 
-Lemma toNat_shlBaux n : forall (p: BITS n), toNat (shlBaux p) = (toNat p).*2.
-Proof. move => p. by rewrite /shlBaux toNatCons. Qed.
-
-Lemma toNat_shlB n  (p: BITS n) : toNat (shlB p) = ((toNat p).*2) %% 2^n.
-Proof. by rewrite /shlB toNat_dropmsb toNat_shlBaux. Qed.
-
-Lemma toNat_rorB n (p: BITS n.+1) : toNat (rorB p) = (toNat p)./2 + (toNat p %% 2) * 2^n.
-Proof. case/tupleP: p => [b p].
-rewrite /rorB toNat_joinmsb /droplsb/splitlsb beheadCons theadCons toNatCons /=.
-rewrite half_bit_double. rewrite modn2 odd_add odd_double addnC. by destruct b.
-Qed.
-
-Lemma toNat_rolB n (p: BITS n.+1) : toNat (rolB p) = (toNat p %% 2^n).*2 + toNat p %/ 2^n.
-Proof.
-rewrite /rolB. rewrite -(toNatK p) splitmsb_fromNat (toNatK p).
-rewrite toNatCons toNat_fromNat.
-rewrite addnC.
-have H:= toNatBounded p.
-case E: (toNat p %/ 2^n) => [| n'].
-+ by rewrite addn0.
-+ case E': n' => [| n'']. done.
-+ rewrite E' in E.
-  rewrite expnS in H.
-  rewrite -ltn_divLR in H; last apply expn_gt0.
-  rewrite E in H. subst.
-  destruct n'' => //.
-Qed.
-
+(*
 Lemma rorBK n : cancel (@rorB n) (@rolB n).
 Proof. rewrite /cancel/rorB/rolB.
 case/tupleP => [b p]. case C: (splitlsb [tuple of b::p]) => [b' p']. rewrite joinmsbK.
@@ -1288,7 +1063,10 @@ Proof. rewrite /cancel/rorB/rolB.
 case/tupleP => [b p]. case C: (splitmsb [tuple of b::p]) => [b' p']. rewrite joinlsbK.
 by rewrite -C splitmsbK.
 Qed.
+*)
 
+(* TODO: Do we keep embedding to Zp? *)
+(*
 Lemma toZp_shlBaux n (p: BITS n) : toZp (shlBaux p) = (toZpAux p * 2%:R)%R.
 Proof. destruct n. by rewrite (tuple0 p).
 apply val_inj.
@@ -1334,7 +1112,9 @@ by rewrite /toZpAux -Zp_nat.
 Qed.
 
 Hint Rewrite toZp_shlBaux toZp_shlB : ZpHom.
+*)
 
+(*
 Lemma shlB_dropmsb n (p: BITS n.+1) : shlB (dropmsb p) = dropmsb (shlB p).
 Proof.
 apply toNat_inj.
@@ -1375,33 +1155,14 @@ rewrite toNat_fromNatBounded => //.
 rewrite div.modn_small => //. by rewrite expnS mul2n ltn_double. 
 by rewrite expnS mul2n ltn_double. 
 rewrite expnS. apply (ltn_trans LT). apply ltn_Pmull => //. apply expn_gt0. Qed. 
+*)
 
 (*---------------------------------------------------------------------------
     Multiplication
   ---------------------------------------------------------------------------*)
 
-Lemma toNat_fullmulB n1 n2 (p1:BITS n1) (p2: BITS n2) :
-  toNat (fullmulB p1 p2) = (toNat p1 * toNat p2).
-Proof. induction n1.
-rewrite (tuple0 p1)/=. by rewrite !mul0n toNat_fromNat mod0n.
-case/tupleP: p1 => [b p].
-rewrite /=theadCons toNatCons beheadCons.
-destruct b.
-
-+ rewrite toNat_addB toNat_joinlsb toNat_joinmsb0 IHn1 add0n toNat_zeroExtendAux.
-  rewrite -!muln2. rewrite mulnDl mul1n addnC -mulnAC.
-  rewrite modn_small => //.
-  rewrite -{1}(mul1n (toNat p2)).
-  rewrite -mulnDl.
-  rewrite expnD.
-  rewrite ltn_mul => //.
-  rewrite expnS. rewrite add1n muln2 mul2n. rewrite ltn_Sdouble.
-  apply (toNatBounded p).
-  apply (toNatBounded p2).
-
-by rewrite toNat_joinlsb IHn1 !add0n -!muln2 mulnAC.
-Qed.
-
+(* TODO: Do we keep embedding to Zp? *)
+(*
 Lemma modZp_pow m n : inZp (m %% 2 ^ n.+1) = inZp (p' := (Zp_trunc (2^n.+1)).+1) m.
 Proof. apply val_inj. simpl. rewrite prednK.
 rewrite prednK. by rewrite modn_mod. apply expn_gt0.
@@ -1417,10 +1178,9 @@ rewrite modZp_pow. rewrite -!Zp_nat. by rewrite !natrM.
 Qed.
 
 Hint Rewrite toZp_mulB : ZpHom.
+*)
 
-Lemma toNat_mulB n (p1 p2: BITS n) : toNat (mulB p1 p2) = (toNat p1 * toNat p2) %% 2^n.
-Proof. by rewrite toNat_low toNat_fullmulB. Qed.
-
+(*
 Lemma mul1B n (p: BITS n) : mulB #1 p = p.
 Proof. destruct n; first apply trivialBits.
 apply toZp_inj. autorewrite with ZpHom.
@@ -1558,7 +1318,7 @@ Proof. induction m. by rewrite expn0 mulB1.
 by rewrite iterS expnS IHm shlB_asMul -mulB_muln mulnC.
 Qed.
 
-
+*)
 
 (*---------------------------------------------------------------------------
     Algebraic structures
@@ -1568,6 +1328,8 @@ Section Structures.
 
 Variable n:nat.
 
+(* TODO: resurrect *)
+(*
 Definition BITS_zmodMixin := ZmodMixin (@addBA n) (@addBC n) (@add0B n) (@addBN n).
 Canonical Structure BITS_zmodType := Eval hnf in ZmodType (BITS n) BITS_zmodMixin.
 Canonical Structure BITS_finZmodType := Eval hnf in [finZmodType of BITS n].
@@ -1575,7 +1337,7 @@ Canonical Structure BITS_baseFinGroupType :=
   Eval hnf in [baseFinGroupType of (BITS n) for +%R].
 Canonical Structure BITS_finGroupType :=
   Eval hnf in [finGroupType of  (BITS n) for +%R].
-
+*)
 End Structures.
 
 (* Unfortunately because of the n.+1 issue, values with "BITS n" types don't pick
@@ -1587,12 +1349,16 @@ Local Notation n := n'.+1.
 
 Lemma BITS_nontrivial : (#1 : BITS n) != #0. Proof. done. Qed.
 
+(* TODO: resurrect *)
+
+(*
 Definition BITSn_comRingMixin :=
   ComRingMixin (@mulBA _) (@mulBC _) (@mul1B _) (@mulBDl _) BITS_nontrivial.
 Canonical Structure BITSn_ringType :=
   Eval hnf in RingType _ BITSn_comRingMixin.
 Canonical Structure BITSn_comRingType :=
   Eval hnf in ComRingType BITSn_ringType (@mulBC _).
+*)
 
 End RingStructures.
 
@@ -1607,6 +1373,9 @@ Notation "''B_' n" := (BITS_comRingType (BITSn_trunc n).+1)
 (*---------------------------------------------------------------------------
     Definitions for ring tactics on DWORDs and BYTEs
   ---------------------------------------------------------------------------*)
+
+(* TODO: resurrect *)
+(*
 Definition BITSring (n:nat) :=
   @mk_rt (BITS n) #0 #1 (@addB n) mulB (@subB n) negB eq
   (@add0B n) (@addBC n) (@addBA n)
@@ -1649,3 +1418,4 @@ Hint Rewrite
 
 Hint Rewrite
   <- addB_addn subB_addn mulB_addn mulB_muln : bitsHints.
+*)

@@ -14,8 +14,6 @@ Set Implicit Arguments.
 Unset Strict Implicit.
 Import Prenex Implicits.
 
-Lemma trivialBits (p q: BITS 0) : p = q.
-Proof. by rewrite (tuple0 p) (tuple0 q). Qed.
 
 (*
 
@@ -90,10 +88,6 @@ Qed.
 (*---------------------------------------------------------------------------
     Properties of all zeroes and all ones
   ---------------------------------------------------------------------------*)
-Lemma fromNat0 n : #0 = zero n.
-Proof. induction n; first apply trivialBits.
-+ rewrite /zero /copy. rewrite /zero /copy in IHn. by rewrite /fromNat-/fromNat IHn nseqCons.
-Qed.
 
 Lemma toNat_zero n : toNat (zero n) = 0.
 Proof. induction n => //. rewrite /toNat/=. rewrite /toNat in IHn. by rewrite IHn. Qed.

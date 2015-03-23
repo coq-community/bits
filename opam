@@ -1,0 +1,19 @@
+opam-version: "1.2"
+name: "coq:bits"
+version: "0.1"
+maintainer: "Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr>"
+authors: "Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr>"
+homepage: ""
+bug-reports: ""
+license: ""
+build: [
+["coq_makefile" "-f" "_CoqProject" "-o" "Makefile"]
+[make "-j%{jobs}%"]
+]
+install: [
+[make "install"]
+]
+remove: ["rm" "-R" "%{lib}%/coq/user-contrib/Bits"]
+depends: [
+"coq" {>= "8.5"}
+]

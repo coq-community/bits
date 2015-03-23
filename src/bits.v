@@ -1,4 +1,4 @@
-Require Export Bits.representation.
-Require Export Bits.representation.properties.
-Require Export Bits.operations.
-Require Export Bits.operations.properties.
+Require Export spec.spec.
+Require Export spec.spec.properties.
+Require Export spec.operations.
+Require Export spec.operations.properties.

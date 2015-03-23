@@ -5,7 +5,7 @@
 
 From Ssreflect
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple.
-Require Import representation.
+Require Import spec.
 
 Set Implicit Arguments.
 Unset Strict Implicit.

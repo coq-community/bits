@@ -95,12 +95,11 @@ endif
 #                    #
 ######################
 
-VFILES:=src/integers.v\
+VFILES:=src/spec/spec.v\
+  src/spec/spec/properties.v\
+  src/spec/operations/properties.v\
+  src/spec/operations.v\
   src/bits.v\
-  src/operations/properties.v\
-  src/operations.v\
-  src/representation/properties.v\
-  src/representation.v\
   src/tuple.v\
   src/nat.v
 

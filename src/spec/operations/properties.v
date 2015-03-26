@@ -18,6 +18,10 @@ Lemma liftUnOpCons n op b (p: BITS n) :
   liftUnOp op (consB b p) = consB (op b) (liftUnOp op p).
 Proof. by apply: eq_from_tnth=> i; rewrite !(tnth_nth (op b)). Qed.
 
+Lemma liftBinOpCons n op b1 b2 (p1 p2: BITS n) :
+  liftBinOp op (consB b1 p1) (consB b2 p2)
+  = consB (op b1 b2) (liftBinOp op p1 p2).
+Proof. by apply: eq_from_tnth=> i; rewrite !(tnth_nth (op b1 b2)). Qed.
 
 (** Do something with every hypothesis. *)
 Local Ltac do_with_hyp' tac :=

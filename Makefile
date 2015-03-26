@@ -40,10 +40,6 @@ TIMECMD=
 STDTIME?=/usr/bin/time -f "$* (user: %U mem: %M ko)"
 TIMER=$(if $(TIMED), $(STDTIME), $(TIMECMD))
 
-vo_to_obj = $(addsuffix .o,\
-  $(filter-out Warning: Error:,\
-  $(shell $(COQBIN)coqtop -q -noinit -batch -quiet -print-mod-uid $(1))))
-
 ##########################
 #                        #
 # Libraries definitions. #
@@ -113,10 +109,6 @@ GLOBFILES:=$(VFILES:.v=.glob)
 GFILES:=$(VFILES:.v=.g)
 HTMLFILES:=$(VFILES:.v=.html)
 GHTMLFILES:=$(VFILES:.v=.g.html)
-OBJFILES=$(call vo_to_obj,$(VOFILES))
-ALLNATIVEFILES=$(OBJFILES:.o=.cmi) $(OBJFILES:.o=.cmo) $(OBJFILES:.o=.cmx) $(OBJFILES:.o=.cmxs)
-NATIVEFILES=$(foreach f, $(ALLNATIVEFILES), $(wildcard $f))
-NATIVEFILES1=$(patsubst src/%,%,$(filter src/%,$(NATIVEFILES)))
 ifeq '$(HASNATDYNLINK)' 'true'
 HASNATDYNLINK_OR_EMPTY := yes
 else
@@ -167,7 +159,7 @@ beautify: $(VFILES:=.beautified)
 	@echo 'Do not do "make clean" until you are sure that everything went well!'
 	@echo 'If there were a problem, execute "for file in $$(find . -name \*.v.old -print); do mv $${file} $${file%.old}; done" in your shell/'
 
-.PHONY: all archclean beautify byte clean gallina gallinahtml html install install-doc install-natdynlink install-toploop opt printenv quick uninstall userinstall validate vio2vo
+.PHONY: all opt byte archclean clean install uninstall_me.sh uninstall userinstall depend html validate
 
 ####################
 #                  #
@@ -185,7 +177,7 @@ userinstall:
 	+$(MAKE) USERINSTALL=true install
 
 install:
-	cd "src" && for i in $(NATIVEFILES1) $(GLOBFILES1) $(VFILES1) $(VOFILES1); do \
+	cd "src" && for i in $(VOFILES1); do \
 	 install -d "`dirname "$(DSTROOT)"$(COQLIBINSTALL)/Bits/$$i`"; \
 	 install -m 0644 $$i "$(DSTROOT)"$(COQLIBINSTALL)/Bits/$$i; \
 	done
@@ -196,9 +188,9 @@ install-doc:
 	 install -m 0644 $$i "$(DSTROOT)"$(COQDOCINSTALL)/Bits/$$i;\
 	done
 
-uninstall_me.sh: Makefile
+uninstall_me.sh:
 	echo '#!/bin/sh' > $@ 
-	printf 'cd "$${DSTROOT}"$(COQLIBINSTALL)/Bits && rm -f $(NATIVEFILES1) $(GLOBFILES1) $(VFILES1) $(VOFILES1) && find . -type d -and -empty -delete\ncd "$${DSTROOT}"$(COQLIBINSTALL) && find "Bits" -maxdepth 0 -and -empty -exec rmdir -p \{\} \;\n' >> "$@"
+	printf 'cd "$${DSTROOT}"$(COQLIBINSTALL)/Bits && rm -f $(VOFILES1) && find . -type d -and -empty -delete\ncd "$${DSTROOT}"$(COQLIBINSTALL) && find "Bits" -maxdepth 0 -and -empty -exec rmdir -p \{\} \;\n' >> "$@"
 	printf 'cd "$${DSTROOT}"$(COQDOCINSTALL)/Bits \\\n' >> "$@"
 	printf '&& rm -f $(shell find "html" -maxdepth 1 -and -type f -print)\n' >> "$@"
 	printf 'cd "$${DSTROOT}"$(COQDOCINSTALL) && find Bits/html -maxdepth 0 -and -empty -exec rmdir -p \{\} \;\n' >> "$@"
@@ -207,13 +199,12 @@ uninstall_me.sh: Makefile
 uninstall: uninstall_me.sh
 	sh $<
 
-clean::
-	rm -f $(OBJFILES) $(OBJFILES:.o=.native) $(NATIVEFILES)
+clean:
 	rm -f $(VOFILES) $(VOFILES:.vo=.vio) $(GFILES) $(VFILES:.v=.v.d) $(VFILES:=.beautified) $(VFILES:=.old)
 	rm -f all.ps all-gal.ps all.pdf all-gal.pdf all.glob $(VFILES:.v=.glob) $(VFILES:.v=.tex) $(VFILES:.v=.g.tex) all-mli.tex
 	- rm -rf html mlihtml uninstall_me.sh
 
-archclean::
+archclean:
 	rm -f *.cmx *.o
 
 printenv:

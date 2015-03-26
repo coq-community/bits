@@ -8,9 +8,7 @@ From Ssreflect
      Require Import ssreflect ssrfun ssrbool eqtype ssrnat
                     seq tuple fintype div zmodp ssralg.
 Require Import nat tuple.
-Require Import spec.
-
-
+Require Import spec.spec.
 
 Set Implicit Arguments.
 Unset Strict Implicit.

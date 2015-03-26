@@ -152,9 +152,7 @@ Definition rolB {n} (p: BITS n.+1) := let (b, p) := eta_expand (splitmsb p) in j
 (* Shift right: shift everything right and put 0 in msb *)
 Definition shrB {n} : BITS n -> BITS n :=
   if n is n.+1 then fun p =>  joinmsb0 (droplsb (n:=n) p) else fun p => nilB.
-
-(* Iterated right shift *)
-Definition shrBn {n}(bs: BITS n)(k: nat): BITS n := iter k shrB bs.
+Definition shrBn {n} (p: BITS n)(k: nat): BITS n := iter k shrB p.
 
 (* Arithmetic shift right: shift one bit to the right, copy msb *)
 Definition sarB {n} (p: BITS n.+1) := joinmsb (msb p, droplsb p).
@@ -164,6 +162,7 @@ Definition shlBaux {n} (p: BITS n) : BITS n.+1  := joinlsb (p, false).
 
 (* Shift left: shift one bit to the left, put 0 in lsb, lose msb *)
 Definition shlB {n} (p: BITS n)  := dropmsb (shlBaux p).
+Definition shlBn {n} (p: BITS n)(k: nat): BITS n := iter k shlB p.
 
 (*---------------------------------------------------------------------------
     Iteration and ranges

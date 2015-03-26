@@ -153,6 +153,9 @@ Definition rolB {n} (p: BITS n.+1) := let (b, p) := eta_expand (splitmsb p) in j
 Definition shrB {n} : BITS n -> BITS n :=
   if n is n.+1 then fun p =>  joinmsb0 (droplsb (n:=n) p) else fun p => nilB.
 
+(* Iterated right shift *)
+Definition shrBn {n}(bs: BITS n)(k: nat): BITS n := iter k shrB bs.
+
 (* Arithmetic shift right: shift one bit to the right, copy msb *)
 Definition sarB {n} (p: BITS n.+1) := joinmsb (msb p, droplsb p).
 

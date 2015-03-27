@@ -1,0 +1,38 @@
+
+To install Coq and Ssreflect, I highly recommend going through Opam:
+
+    https://coq.inria.fr/howto-opam 
+
+The library is known (to have) compiled with Coq-8.5/Ssreflect-1.5.
+
+* Installing Coq 8.5 and Ssreflect 1.5
+
+At the moment (pre-8.5 release cycle), this is a bit tricky. We must
+first install the development version of Coq:
+
+$ opam switch coq-8.5 --alias-of 4.01.0
+$ opam repo add coq-stable https://github.com/coq/repo-stable.git
+$ opam repo add coq-unstable https://github.com/coq/repo-unstable.git
+$ opam repo add coqs https://github.com/coq/repo-coqs.git
+$ opam install -j4 coq.dev
+
+Then, at the time of writing, we need the Coq-contribs version of
+Ssreflect:
+
+$ svn checkout svn://scm.gforge.inria.fr/svnroot/coq-contribs/trunk/Saclay/Ssreflect
+$ cd Ssreflect
+$ opam pin add coq:contrib:ssreflect .
+$ opam install coq:contrib:ssreflect
+
+* Pinning the package
+
+To make this package available to others in your system, pin it:
+
+$ opam pin add coq:bits . -k git
+
+After a modification, we simply upgrade the package:
+
+$ opam upgrade coq:bits
+
+More about pinning: 
+  https://opam.ocaml.org/blog/opam-1-2-pin/

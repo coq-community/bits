@@ -19,10 +19,9 @@ $ opam install -j4 coq.dev
 Then, at the time of writing, we need the Coq-contribs version of
 Ssreflect:
 
-$ svn checkout svn://scm.gforge.inria.fr/svnroot/coq-contribs/trunk/Saclay/Ssreflect
-$ cd Ssreflect
+$ git clone https://gforge.inria.fr/git/coq-contribs/ssreflect.git
+$ cd ssreflect
 $ opam pin add coq:contrib:ssreflect .
-$ opam install coq:contrib:ssreflect
 
 * Pinning the package
 

@@ -3,8 +3,8 @@
   ===========================================================================*)
 From Ssreflect
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple ssralg.
-From Bits
-     Require Import representation operations.
+From Bits.spec
+     Require Import spec operations.
 
 Set Implicit Arguments.
 Unset Strict Implicit.

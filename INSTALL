@@ -27,7 +27,8 @@ $ opam pin add coq:contrib:ssreflect .
 
 To make this package available to others in your system, pin it:
 
-$ opam pin add coq:bits . -k git
+$ cd coq-bits
+$ opam pin add .
 
 After a modification, we simply upgrade the package:
 

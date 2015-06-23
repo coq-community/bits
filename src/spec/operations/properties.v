@@ -1565,6 +1565,11 @@ Qed.
 (*---------------------------------------------------------------------------
     Algebraic structures
   ---------------------------------------------------------------------------*)
+
+(* TODO: remove this hack. This is due to 'GRing.Ring.sort (Zp_ringType (Zp_trunc (2 ^ n)))'
+   being automatically detected as 'GRing.Zmodule.sort (BITS_zmodType ?n.+1)', even in
+   cases where it fails.
+
 Require Import Ssreflect.choice Ssreflect.fintype Ssreflect.fingroup Ssreflect.finalg.
 Section Structures.
 
@@ -1651,3 +1656,4 @@ Hint Rewrite
 
 Hint Rewrite
   <- addB_addn subB_addn mulB_addn mulB_muln : bitsHints.
+*)

@@ -1566,11 +1566,8 @@ Qed.
     Algebraic structures
   ---------------------------------------------------------------------------*)
 
-(* TODO: remove this hack. This is due to 'GRing.Ring.sort (Zp_ringType (Zp_trunc (2 ^ n)))'
-   being automatically detected as 'GRing.Zmodule.sort (BITS_zmodType ?n.+1)', even in
-   cases where it fails.
-
 Require Import Ssreflect.choice Ssreflect.fintype Ssreflect.fingroup Ssreflect.finalg.
+
 Section Structures.
 
 Variable n:nat.
@@ -1585,8 +1582,30 @@ Canonical Structure BITS_finGroupType :=
 
 End Structures.
 
+(* TODO: Extract Minimal Working Example for 'Failed' below *)
+Parameter n: nat.
+Variable q: 'I_n.+2.
+
+Set Printing All.
+Check (n%:R)%R.
+(*
+@GRing.natmul (GRing.Ring.zmodType ?t0) (GRing.one ?t0) n
+     : GRing.Zmodule.sort (GRing.Ring.zmodType ?t0)
+where
+?t0 : [ |- GRing.Ring.type] 
+ *)
+Check (q * n%:R)%R.
+(*
+@GRing.mul (Zp_ringType n) q
+  (@GRing.natmul (GRing.Ring.zmodType (Zp_ringType n))
+     (GRing.one (Zp_ringType n)) n)
+     : GRing.Ring.sort (Zp_ringType n)
+*)
+
 (* Unfortunately because of the n.+1 issue, values with "BITS n" types don't pick
    up the ring structure (and multiplication etc.) automatically *)
+(*
+
 Section RingStructures.
 
 Variable n': nat.
@@ -1602,6 +1621,27 @@ Canonical Structure BITSn_comRingType :=
   Eval hnf in ComRingType BITSn_ringType (@mulBC _).
 
 End RingStructures.
+
+
+Check (n%:R)%R.
+(* Incorrect:
+@GRing.natmul (BITS_zmodType (S ?n)) (GRing.one (BITSn_ringType ?n)) n
+     : GRing.Zmodule.sort (BITS_zmodType (S ?n))
+where
+?n : [ |- nat] 
+*)
+
+Fail Check (q * n%:R)%R.
+(* 
+The term
+ "@GRing.natmul (BITS_zmodType (S ?n)) (GRing.one (BITSn_ringType ?n)) n"
+has type "GRing.Zmodule.sort (BITS_zmodType (S ?n))"
+while it is expected to have type "GRing.Ring.sort (Zp_ringType n)".
+ *)
+
+End RingStructures.
+
+*)
 
 (* We could do this, but how would we cope with length-polymorphic stuff? *)
 (*
@@ -1656,4 +1696,4 @@ Hint Rewrite
 
 Hint Rewrite
   <- addB_addn subB_addn mulB_addn mulB_muln : bitsHints.
-*)
+

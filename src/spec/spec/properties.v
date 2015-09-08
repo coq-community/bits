@@ -7,7 +7,7 @@ From Coq
 From Ssreflect
      Require Import ssreflect ssrfun ssrbool eqtype ssrnat
                     seq tuple fintype div zmodp ssralg.
-Require Import nat tuple.
+Require Import ssrextra.nat ssrextra.tuple.
 Require Import spec.spec.
 
 Set Implicit Arguments.

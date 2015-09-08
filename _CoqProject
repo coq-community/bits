@@ -1,6 +1,6 @@
 -R src Bits
-src/nat.v
-src/tuple.v
+src/ssrextra/nat.v
+src/ssrextra/tuple.v
 src/bits.v
 src/spec/operations.v
 src/spec/operations/properties.v

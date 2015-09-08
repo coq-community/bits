@@ -3,7 +3,7 @@
   ===========================================================================*)
 From Ssreflect
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple zmodp fintype div.
-Require Import tuple nat.
+Require Import ssrextra.tuple ssrextra.nat.
 Require Import spec spec.properties operations.
 
 Set Implicit Arguments.

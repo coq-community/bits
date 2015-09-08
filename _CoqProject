@@ -6,3 +6,4 @@ src/spec/operations.v
 src/spec/operations/properties.v
 src/spec/spec/properties.v
 src/spec/spec.v
+src/extraction/axioms.v

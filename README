@@ -1,3 +1,10 @@
 This library has been extracted from Andrew Kennedy et al. 'x86proved'.
 
 https://x86proved.codeplex.com/SourceControl/network/forks/andrewjkennedy/x86proved/latest#src/bits.v
+
+To import the main library, do:
+   Require Import Bits.bits.
+
+An axiomatic interface supporting efficient extraction to OCaml can be
+loaded with:
+   Require Import Bits.extraction.axioms.

@@ -180,4 +180,4 @@ Canonical fromInt63 (n: Int63): BITS 63
 
 Axiom fromInt63_repr:
   forall i bs,
-    native_repr i bs -> fromInt63 i = bs.
+    native_repr i (fromInt63 i).

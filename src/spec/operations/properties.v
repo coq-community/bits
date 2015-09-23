@@ -1257,6 +1257,23 @@ Proof. move => p. by rewrite /shlBaux toNatCons. Qed.
 Lemma toNat_shlB n  (p: BITS n) : toNat (shlB p) = ((toNat p).*2) %% 2^n.
 Proof. by rewrite /shlB toNat_dropmsb toNat_shlBaux. Qed.
 
+Lemma toNat_shlBn:
+  forall n k, k < n -> toNat (shlBn (n := n) #1 k) = 2 ^ k.
+Proof.
+  move=> n.
+  elim=> [le_k|k IHk le_k].
+  + (* k ~ 0 *)
+    rewrite toNat_fromNat modn_small=> //.
+    have {1}->: 1 = 2 ^ 0 by trivial.
+    by rewrite ltn_exp2l.
+  + (* k ~ k.+1 *)
+    rewrite toNat_shlB IHk.
+    rewrite -muln2.
+    have {2}->: 2 = 2 ^ 1 by trivial.
+    rewrite -expnD addn1 modn_small // ltn_exp2l //.
+    auto with arith.
+Qed.
+
 Lemma toNat_rorB n (p: BITS n.+1) : toNat (rorB p) = (toNat p)./2 + (toNat p %% 2) * 2^n.
 Proof. case/tupleP: p => [b p].
 rewrite /rorB toNat_joinmsb /droplsb/splitlsb beheadCons theadCons toNatCons /=.
@@ -1326,6 +1343,21 @@ rewrite (@modn_small 1.*2).
 by rewrite muln2.
 rewrite expnS mul2n. rewrite ltn_double.
 apply pow2_gt1. apply pow2_gt1.
+Qed.
+
+Lemma toZp_shlBn:
+  forall n (p: BITS n) k, k < n ->
+    toZp (shlBn p k) = (toZp p * (2 ^ k)%:R)%R.
+Proof.
+  move=> n p.
+  elim=> [|k IHk] le_k.
+  + (* Case: k ~ 0 *)
+    by rewrite expn0 GRing.mulr_natr //.
+  + (* Case: k ~ k + 1 *)
+    rewrite /shlBn iterS -[iter k shlB p]/(shlBn _ _).
+    rewrite toZp_shlB.
+    rewrite IHk; last by auto with arith.
+    by rewrite expnS mulnC !GRing.mulr_natr GRing.mulrnA.
 Qed.
 
 Lemma toZpCons n (p: BITS n) b : toZp  [tuple of b :: p] = (b%:R + toZpAux p * 2%:R)%R.

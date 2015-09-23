@@ -147,37 +147,37 @@ Axiom succ_repr:
     native_repr (succ i) (incB bs).
 
 
-Fixpoint toInt (bs: seq bool)(k: Int63): Int63 :=
+Fixpoint bitsToInt (bs: seq bool)(k: Int63): Int63 :=
   match bs with
     | [::] => zero
-    | [:: false & bs] => toInt bs (succ k)
-    | [:: true & bs ] => lor (lsl one k) (toInt bs (succ k))
+    | [:: false & bs] => bitsToInt bs (succ k)
+    | [:: true & bs ] => lor (lsl one k) (bitsToInt bs (succ k))
   end.
 
 (** Careful, this is painfully slow... *)
-Definition toInt63 (bs: BITS wordsize): Int63 := toInt bs zero.
+Definition bitsToInt63 (bs: BITS wordsize): Int63 := bitsToInt bs zero.
 
-Axiom toInt63_repr:
+Axiom bitsToInt63_repr:
   forall bs,
-    native_repr (toInt63 bs) bs.
+    native_repr (bitsToInt63 bs) bs.
 
 
-Fixpoint fromInt (n: Int63)(k: nat): seq bool :=
+Fixpoint bitsFromInt (n: Int63)(k: nat): seq bool :=
   match k with 
     | 0 => [::]
     | k.+1 =>
-      [:: leq (land (lsr n (toInt63 #(wordsize - k.+1))) one) one &
-          fromInt n k]
+      [:: leq (land (lsr n (bitsToInt63 #(wordsize - k.+1))) one) one &
+          bitsFromInt n k]
   end.
 
-Lemma fromInt63P {k} (n: Int63): size (fromInt n k) == k.
+Lemma bitsFromInt63P {k} (n: Int63): size (bitsFromInt n k) == k.
 Proof.
   elim: k=> // [k IH].
 Qed.
 
-Canonical fromInt63 (n: Int63): BITS 63
-  := Tuple (fromInt63P n).
+Canonical bitsFromInt63 (n: Int63): BITS 63
+  := Tuple (bitsFromInt63P n).
 
-Axiom fromInt63_repr:
-  forall i bs,
-    native_repr i (fromInt63 i).
+Axiom bitsFromInt63_repr:
+  forall i,
+    native_repr i (bitsFromInt63 i).

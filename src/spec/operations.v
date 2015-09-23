@@ -184,3 +184,25 @@ Definition bIterFrom {n A} (p c: BITS n) (f: BITS n -> A -> A) x :=
 (* Ranges *)
 Definition bIota {n} (p m: BITS n) : seq (BITS n) := rev (bIterFrom p m cons nil).
 Definition bRange {n} (p q: BITS n) := bIota p (subB q p).
+
+(*---------------------------------------------------------------------------
+    Notations
+  ---------------------------------------------------------------------------*)
+
+Module BitsNotations.
+Infix "<<" := shlBn (at level 30, no associativity) : bits_scope.
+Infix ">>" := shrBn (at level 30, no associativity) : bits_scope.
+Infix "|" := orB (at level 40, left associativity) : bits_scope.
+Infix "&" := andB (at level 40, left associativity) : bits_scope.
+(*Infix "^" := xorB (at level 40, left associativity) : bits_scope.*)
+Notation "n + m" := (addB n m) : bits_scope.
+Notation "m .+1" := (incB m) : bits_scope.
+Notation "m .-1" := (decB m) : bits_scope.
+Notation "- m" := (negB m) : bits_scope.
+Notation "~ m" := (invB m) : bits_scope.
+End BitsNotations.
+
+Open Scope bits_scope.
+Delimit Scope bits_scope with bits.
+Bind Scope bits_scope with BITS.
+

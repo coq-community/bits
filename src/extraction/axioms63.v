@@ -181,3 +181,20 @@ Canonical bitsFromInt63 (n: Int63): BITS 63
 Axiom bitsFromInt63_repr:
   forall i,
     native_repr i (bitsFromInt63 i).
+
+Module Int63Notations.
+Infix "<<" := lsl (at level 30, no associativity) : int63_scope.
+Infix ">>" := lsr (at level 30, no associativity) : int63_scope.
+Infix "|" := lor (at level 40, left associativity) : int63_scope.
+Infix "&" := land (at level 40, left associativity) : int63_scope.
+(*Infix "^" := lxor (at level 40, left associativity) : int63_scope.*)
+Notation "n + m" := (ladd n m) : int63_scope.
+Notation "m .-1" := (ldec m) : int63_scope.
+Notation "- m" := (lneg m) : int63_scope.
+Notation "~ m" := (lnot m) : int63_scope.
+End Int63Notations.
+
+Open Scope int63_scope.
+Delimit Scope int63_scope with int63.
+Bind Scope int63_scope with Int63.
+

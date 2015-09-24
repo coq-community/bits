@@ -31,7 +31,7 @@ word. *)
 
 Definition natural_repr: Int63 -> nat -> Prop :=
   fun i n =>
-    exists bs, native_repr i bs /\ # n = bs.
+    n < 2 ^ wordsize /\ exists bs, native_repr i bs /\ # n = bs.
 
 
 (** We axiomatize the following operations from OCaml: *)

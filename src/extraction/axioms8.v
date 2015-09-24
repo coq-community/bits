@@ -3,7 +3,7 @@ From Coq
 From Ssreflect
      Require Import ssreflect ssrbool eqtype ssrnat seq tuple fintype ssrfun.
 From Bits
-     Require Import spec.spec spec.operations spec.operations.properties.
+     Require Import bits.
 
 (* TODO:
      * Complete missing lemmas
@@ -348,12 +348,14 @@ Qed.
 numbers, going through a [BITS wordsize] word. *)
 
 Definition natural_repr (i: Int)(n: nat): bool :=
-  [exists bs, native_repr i bs && (# n == bs)].
+  (n < 2 ^ wordsize) && [exists bs, native_repr i bs && (# n == bs)].
 
 (** * Representation lemma: logical shift right *)
 
-(* TODO: this one might be tricky: get nat on one side, int on the other *)
-Definition lsr_test: bool. Admitted.
+Definition lsr_test: bool
+  := forallInt (fun i =>
+       forallInt (fun i' =>
+         native_repr (lsr i i') (shrBn (fromInt i) (toNat (fromInt i'))))).
 
 (* Validation condition:
     [lsr "m" "n"] corresponds to machine [m lsr n] *)
@@ -362,13 +364,32 @@ Axiom lsr_valid: lsr_test.
 Lemma lsr_repr: forall i j bs k,
     native_repr i bs -> natural_repr j k ->
     native_repr (lsr i j) (shrBn bs k).
-Admitted.
+Proof.
+  move=> i i' ? k.
+  rewrite /native_repr eq_adj; move/eqP=> <-.
+  rewrite /natural_repr.
+  move/andP=> [ltn_k /existsP [bs' /andP [H /eqP H']]].
+  rewrite /native_repr eq_adj in H.
+  move/eqP: H=> H.
+  apply/eqIntP.
+  have ->: k = toNat (fromInt i').
+    rewrite H.
+    have ->: k = toNat (fromNat (n := wordsize) k).
+      rewrite toNat_fromNatBounded=> //.
+    by rewrite H'.
+  clear H H'.
+  move: i'; apply/(forallIntP (fun i' => eq (lsr i i') (toInt (shrBn (fromInt i) (toNat ((fromInt i'))))))).
+  move=> i'; apply/eqIntP.
+  move: i; apply/forallIntP; last by apply lsr_valid.
+  move=> i'; apply idP.
+Qed.
 
 (** * Representation lemma: logical shift left *)
 
-(* TODO: this one might be tricky: get nat on one side, int on the other *)
-
-Definition lsl_test: bool. Admitted.
+Definition lsl_test: bool
+  := forallInt (fun i =>
+       forallInt (fun i' =>
+         native_repr (lsl i i') (shlBn (fromInt i) (toNat (fromInt i'))))).
 
 (* Validation condition:
     [lsl "m" "n"] corresponds to machine [m lsl n] *)
@@ -377,23 +398,52 @@ Axiom lsl_valid: lsl_test.
 Lemma lsl_repr: forall i j bs k,
     native_repr i bs -> natural_repr j k ->
     native_repr (lsl i j) (shlBn bs k).
-Admitted.
+Proof.
+  move=> i i' ? k.
+  rewrite /native_repr eq_adj; move/eqP=> <-.
+  rewrite /natural_repr.
+  move/andP=> [ltn_k /existsP [bs' /andP [H /eqP H']]].
+  rewrite /native_repr eq_adj in H.
+  move/eqP: H=> H.
+  apply/eqIntP.
+  have ->: k = toNat (fromInt i').
+    rewrite H.
+    have ->: k = toNat (fromNat (n := wordsize) k).
+      rewrite toNat_fromNatBounded=> //.
+    by rewrite H'.
+  clear H H'.
+  move: i'; apply/(forallIntP (fun i' => eq (lsl i i') (toInt (shlBn (fromInt i) (toNat ((fromInt i'))))))).
+  move=> i'; apply/eqIntP.
+  move: i; apply/forallIntP; last by apply lsl_valid.
+  move=> i'; apply idP.
+Qed.
 
 (** * Representation lemma: negation *)
 
-Definition lneg_test: bool. Admitted.
+Definition neg_test: bool
+  := forallInt (fun i =>
+       native_repr (neg i) (negB (fromInt i))).
 
 (* Validation condition:
     [negB "m"] corresponds to machine [- m] *)
-Axiom lneg_valid: lneg_test.
+Axiom neg_valid: neg_test.
 
-Lemma lneg_repr: forall i bs,
+Lemma neg_repr: forall i bs,
     native_repr i bs -> native_repr (neg i) (negB bs).
-Admitted.
+Proof.
+  move=> i ?.
+  rewrite /native_repr eq_adj.
+  move/eqP=> <-.
+  apply/eqIntP.
+  move: i; apply/forallIntP; last by apply neg_valid.
+  move=> i; apply/eqIntP.
+Qed.
 
 (** * Representation lemma: decrement *)
 
-Definition dec_test: bool. Admitted.
+Definition dec_test: bool
+  := forallInt (fun i =>
+       native_repr (dec i) (decB (fromInt i))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
@@ -401,11 +451,21 @@ Axiom dec_valid: dec_test.
 
 Lemma dec_repr: forall i bs,
     native_repr i bs -> native_repr (dec i) (decB bs).
-Admitted.
+Proof.
+  move=> i ?.
+  rewrite /native_repr eq_adj.
+  move/eqP=> <-.
+  apply/eqIntP.
+  move: i; apply/forallIntP; last by apply dec_valid.
+  move=> i; apply/eqIntP.
+Qed.
 
 (** * Representation lemma: addition *)
 
-Definition add_test: bool. Admitted.
+Definition add_test: bool
+  := forallInt (fun i =>
+       forallInt (fun i' =>
+         native_repr (add i i') (addB (fromInt i) (fromInt i')))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
@@ -415,8 +475,15 @@ Lemma add_repr:
   forall i i' bs bs',
     native_repr i bs -> native_repr i' bs' ->
     native_repr (add i i') (addB bs bs').
-Admitted.
-
+Proof.
+  move=> i i' ? ?.
+  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  apply/eqIntP.
+  move: i'; apply/(forallIntP (fun i' => eq (add i i') (toInt (addB (fromInt i) (fromInt i'))))).
+  move=> i'; apply/eqIntP.
+  move: i; apply/forallIntP; last by apply add_valid.
+  move=> i'; apply idP.
+Qed.
 
 (** Extract the tests: they should all return true! *)
 
@@ -435,8 +502,8 @@ Definition tests
                          lxor_test ;
                          lsr_test ;
                          lsl_test ;
-                         lneg_test ;
+                         neg_test ;
                          dec_test ;
                          add_test ].
 
-Extraction "axioms.ml"  tests. 
+Extraction "axioms.ml" tests.

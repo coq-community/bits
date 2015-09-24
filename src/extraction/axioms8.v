@@ -37,7 +37,7 @@ Axiom forallInt : (Int -> bool) -> bool.
 Extract Inlined Constant forallInt => "forall_int".
 
 Axiom eq: Int -> Int -> bool.
-Extract Inlined Constant eq => "(=)".
+Extract Inlined Constant eq => "(fun x y -> (x land ((1 lsl 8) - 1)) = (y land ((1 lsl 8) - 1)))".
 
 Section Trust.
 

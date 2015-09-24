@@ -44,11 +44,10 @@ Section Trust.
 (* Axiom 1: Equality of integer is embedded within Coq's propositional equality: *)
 Axiom eqIntP : Equality.axiom eq.
 
-Variables (P : pred Int) (PP : Int -> Prop).
-Hypothesis viewP : forall x, reflect (PP x) (P x).
+Definition viewP (P: pred Int) (PP: Int -> Prop) := forall x, reflect (PP x) (P x).
 
 (* Axiom 2: If a property is true for all integers, then it is propositionally true *)
-Axiom forallIntP : reflect (forall x, PP x) (forallInt (fun x => P x)).
+Axiom forallIntP : forall P PP, viewP P PP -> reflect (forall x, PP x) (forallInt (fun x => P x)).
 
 End Trust.
 
@@ -156,9 +155,10 @@ Proof.
   move=> x y /eqP H.
   apply/eqIntP.
   move: H; apply/implyP.
-  move: x; apply/(forallIntP (fun x => (fromInt x == fromInt y) ==> eq x y)).
-  move: y; apply/forallIntP. 
-  exact: fromInt_inj_valid.
+  move: y; apply/(forallIntP (fun y => (fromInt x == fromInt y) ==> eq x y)).
+  move=> y; apply idP.
+  move: x; apply/forallIntP; last by apply fromInt_inj_valid.
+  move=> x; apply idP.
 Qed.
 
 Lemma fromIntK: cancel fromInt toInt.
@@ -244,8 +244,8 @@ Proof.
   rewrite /native_repr eq_adj.
   move/eqP=> <-.
   apply/eqIntP.
-  move: i; apply/forallIntP.
-  apply succ_valid.
+  move: i; apply/forallIntP; last by apply succ_valid.
+  move=> x; apply/eqIntP.
 Qed.
 
 (** * Representation lemma: negation *)
@@ -265,8 +265,8 @@ Proof.
   rewrite /native_repr eq_adj.
   move/eqP=> <-.
   apply/eqIntP.
-  move: i; apply/forallIntP.
-  apply lnot_valid.
+  move: i; apply/forallIntP; last by apply lnot_valid.
+  move=> i; apply/eqIntP.
 Qed.
 
 (** * Representation lemma: logical and *)
@@ -288,13 +288,17 @@ Proof.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
   apply/eqIntP.
   move: i'; apply/(forallIntP (fun i' => eq (land i i') (toInt (andB (fromInt i) (fromInt i'))))).
-  move: i; apply/forallIntP.
-  apply land_valid.
+  move=> i'; apply/eqIntP.
+  move: i; apply/forallIntP; last by apply land_valid.
+  move=> i'; apply idP.
 Qed.
 
 (** * Representation lemma: logical or *)
 
-Definition lor_test: bool. Admitted.
+Definition lor_test: bool
+  := forallInt (fun i =>
+       forallInt (fun i' =>
+         native_repr (lor i i') (orB (fromInt i) (fromInt i')))).
 
 (* Validation condition:
     [lor "m" "n"] corresponds to machine [m lor n] *)
@@ -303,11 +307,22 @@ Axiom lor_valid: lor_test.
 Lemma lor_repr: forall i i' bs bs',
     native_repr i bs -> native_repr i' bs' ->
     native_repr (lor i i') (orB bs bs').
-Admitted.
+Proof.
+  move=> i i' ? ?.
+  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  apply/eqIntP.
+  move: i'; apply/(forallIntP (fun i' => eq (lor i i') (toInt (orB (fromInt i) (fromInt i'))))).
+  move=> i'; apply/eqIntP.
+  move: i; apply/forallIntP; last by apply lor_valid.
+  move=> i'; apply idP.
+Qed.
 
 (** * Representation lemma: logical xor *)
 
-Definition lxor_test: bool. Admitted.
+Definition lxor_test: bool
+  := forallInt (fun i =>
+       forallInt (fun i' =>
+         native_repr (lxor i i') (xorB (fromInt i) (fromInt i')))).
 
 (* Validation condition:
     [lxor "m" "n"] corresponds to machine [m lxor n] *)
@@ -317,7 +332,15 @@ Axiom lxor_valid: lxor_test.
 Lemma lxor_repr: forall i i' bs bs',
     native_repr i bs -> native_repr i' bs' ->
     native_repr (lxor i i') (xorB bs bs').
-Admitted. 
+Proof.
+  move=> i i' ? ?.
+  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  apply/eqIntP.
+  move: i'; apply/(forallIntP (fun i' => eq (lxor i i') (toInt (xorB (fromInt i) (fromInt i'))))).
+  move=> i'; apply/eqIntP.
+  move: i; apply/forallIntP; last by apply lxor_valid.
+  move=> i'; apply idP.
+Qed.
 
 (** * Representation of naturals *)
 

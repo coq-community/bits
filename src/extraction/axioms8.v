@@ -1,176 +1,403 @@
+From Coq
+     Require Import ZArith.ZArith.
 From Ssreflect
-     Require Import ssreflect ssrbool eqtype ssrnat seq tuple.
+     Require Import ssreflect ssrbool eqtype ssrnat seq tuple fintype ssrfun.
 From Bits
      Require Import spec.spec spec.operations spec.operations.properties.
 
-(** * An axiomatization of OCaml native char *)
+(** * An axiomatization of OCaml native integers *)
 
-(* TODO: prove the correctness of extraction by verifying all 8 bits numbers *)
-
-(**
-
-This axiomatization is based on "native-coq"
-(https://github.com/maximedenes/native-coq)
-
- *)
-
-(** ** Base type and operations *)
 
 Definition wordsize := 8.
 
-Axiom Int8: Type.
-Extract Inlined Constant Int8 => "char".
-
-(** We say that an [n : Int8] is the representation of a bitvector [bs
-: BITS 8] if they satisfy the axiom [repr_native]. Morally, it means
-that both represent the same number (ie. the same 8 booleans). *)
-
-Axiom native_repr: Int8 -> BITS wordsize -> Prop.
-
-(** We axiomatize the following operations from OCaml: *)
-
-Axiom leq: Int8 -> Int8 -> bool.
-Extract Inlined Constant leq => "(=)".
-
-Axiom leq_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    (leq i i') = (bs == bs').
+Axiom Int: Type.
+Extract Inlined Constant Int => "int".
 
 
-Axiom lnot: Int8 -> Int8.
-Extract Inlined Constant lnot => "(fun x -> Obj.magic (lnot (Obj.magic x)))".
+(* Our trusted computing base sums up in these two operations and
+their associated  reflection principles in Coq. *)
 
-Axiom lnot_repr:
-  forall i bs,
-    native_repr i bs ->
-    native_repr (lnot i) (invB bs).
+Axiom forallInt : (Int -> bool) -> bool.
+Extract Inlined Constant forallInt => "forall_int".
 
+Axiom eq: Int -> Int -> bool.
+Extract Inlined Constant eq => "(=)".
 
-Axiom land: Int8 -> Int8 -> Int8.
-Extract Inlined Constant land => "(fun x y -> Obj.magic ((Obj.magic x) land (Obj.magic y)))".
+Section Trust.
 
-Axiom land_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (land i i') (andB bs bs').
+(* Axiom 1: Equality of integer is embedded within Coq's propositional equality: *)
+Axiom eqIntP : Equality.axiom eq.
 
+Variables (P : pred Int) (PP : Int -> Prop).
+Hypothesis viewP : forall x, reflect (PP x) (P x).
 
-Axiom lor: Int8 -> Int8 -> Int8.
-Extract Inlined Constant lor => "(fun x y -> Obj.magic ((Obj.magic x) lor (Obj.magic y)))".
+(* Axiom 2: If a property is true for all integers, then it is propositionally true *)
+Axiom forallIntP : reflect (forall x, PP x) (forallInt (fun x => P x)).
 
-Axiom lor_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (lor i i') (orB bs bs').
+End Trust.
 
+(* All the axiomatized properties below are exhautively tested. *)
 
-Axiom lxor: Int8 -> Int8 -> Int8.
-Extract Inlined Constant lxor => "(fun x y -> Obj.magic ((Obj.magic x) lxor (Obj.magic y)))".
+Axiom zero : Int.
+Extract Inlined Constant zero => "0".
 
-Axiom lxor_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (lxor i i') (xorB bs bs').
+Axiom one : Int.
+Extract Inlined Constant one => "1".
 
+Axiom succ : Int -> Int.
+Extract Constant succ => "(fun x -> x + 1)".
 
-Axiom lsr: Int8 -> Int8 -> Int8.
-Extract Inlined Constant lsr => "(fun x y -> Obj.magic ((Obj.magic x) lsr (Obj.magic y)))".
+Axiom lor: Int -> Int -> Int.
+Extract Inlined Constant lor => "(lor)".
 
-Axiom lsr_repr:
-  forall i j bs k,
-    native_repr i bs -> natural_repr j k ->
-    native_repr (lsr i j) (shrBn bs k).
+Axiom lsl: Int -> Int -> Int.
+Extract Inlined Constant lsl => "(lsl)".
 
+Axiom land: Int -> Int -> Int.
+Extract Inlined Constant land => "(land)".
 
-Axiom lsl: Int8 -> Int8 -> Int8.
-Extract Inlined Constant lsl => "(fun x y -> (Obj.magic x) lsl (Obj.magic y))".
+Axiom lt: Int -> Int -> bool.
+Extract Inlined Constant lt => "(<)".
 
-Axiom lsl_repr:
-  forall i j bs k,
-    native_repr i bs -> natural_repr j k ->
-    native_repr (lsl i j) (shlBn bs k).
+Axiom lsr: Int -> Int -> Int.
+Extract Inlined Constant lsr => "(lsr)".
 
-(*
-Axiom lneg: Int8 -> Int8.
-Extract Inlined Constant lneg => "-".
+Axiom neg: Int -> Int.
+Extract Inlined Constant neg => "-".
 
-Axiom lneg_repr:
-  forall i bs,
-    native_repr i bs ->
-    native_repr (lneg i) (negB bs).
+Axiom lnot: Int -> Int.
+Extract Inlined Constant lnot => "lnot".
 
+Axiom lxor: Int -> Int -> Int.
+Extract Inlined Constant lxor => "(lxor)".
 
-Axiom ldec: Int8 -> Int8.
-Extract Inlined Constant ldec => "(fun x -> x - 1)".
+Axiom dec: Int -> Int.
+Extract Constant dec => "(fun x -> x - 1)".
 
-Axiom ldec_repr:
-  forall i bs,
-    native_repr i bs ->
-    native_repr (ldec i) (decB bs).
-*)
+Axiom add: Int -> Int -> Int.
+Extract Inlined Constant add => "(+)".
 
-Axiom ladd: Int8 -> Int8 -> Int8.
-Extract Inlined Constant ladd => "(fun x y -> Obj.magic (Obj.magic x) + (Obj.magic y))".
+(* Conversion between machine integers and bit vectors *)
 
-Axiom ladd_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (ladd i i') (addB bs bs').
-
-
-Axiom zero : Int8.
-Extract Inlined Constant zero => "Obj.magic 0".
-
-Axiom zero_repr: native_repr zero #0.
-
-
-Axiom one : Int8.
-Extract Inlined Constant one => "Obj.magic 1".
-
-Axiom one_repr: native_repr one #1.
-
-
-Axiom succ : Int8 -> Int8.
-Extract Inlined Constant succ => "(fun x -> Obj.magic ((Obj.magic x) + 1))".
-
-Axiom succ_repr:
-  forall i bs,
-    native_repr i bs ->
-    native_repr (succ i) (incB bs).
-
-
-Fixpoint toInt (bs: seq bool)(k: Int8): Int8 :=
-  match bs with
+Fixpoint PtoInt (p: seq bool): Int :=
+  match p with
+    | true :: p => lor one (lsl (PtoInt p) one)
+    | false :: p => lsl (PtoInt p) one
     | [::] => zero
-    | [:: false & bs] => toInt bs (succ k)
-    | [:: true & bs ] => lor (lsl one k) (toInt bs (succ k))
   end.
 
-(** Careful, this is painfully slow... *)
-Definition toInt8 (bs: BITS wordsize): Int8 := toInt bs zero.
+Definition toInt (bs: BITS wordsize): Int :=
+  match splitmsb bs with
+    | (false, bs') => PtoInt bs'
+    | (true, bs') => neg (PtoInt (negB bs))
+  end.
 
-Axiom toInt8_repr:
-  forall bs,
-    native_repr (toInt8 bs) bs.
-
-
-Fixpoint fromInt (n: Int8)(k: nat): seq bool :=
-  match k with 
+Fixpoint fromIntS (k: nat)(n: Int): seq bool :=
+  match k with
     | 0 => [::]
     | k.+1 =>
-      [:: leq (land (lsr n (toInt8 #(wordsize - k.+1))) one) one &
-          fromInt n k]
+      let p := fromIntS k (lsr n one) in
+      (eq (land n one) one) :: p                           
   end.
 
-Lemma fromInt8P {k} (n: Int8): size (fromInt n k) == k.
+Lemma fromIntP {k} (n: Int): size (fromIntS k n) == k.
 Proof.
-  elim: k=> // [k IH].
+  elim: k n => // [k IH] n //=.
+  rewrite eqSS //.
 Qed.
 
-Canonical fromInt8 (n: Int8): BITS 8
-  := Tuple (fromInt8P n).
+Canonical fromInt (n: Int): BITS wordsize
+  := Tuple (fromIntP n).
 
-Axiom fromInt8_repr:
-  forall i bs,
-    native_repr i bs -> fromInt8 i = bs.
+(** * Cancelation of [toInt] on [fromInt] *)
+
+Definition toIntK_test: bool :=
+ [forall bs , fromInt (toInt bs) == bs ].
+
+(* Validation condition:
+    Experimentally, [toInt] must be cancelled by [fromInt] *)
+Axiom toIntK_valid: toIntK_test.
+
+Lemma toIntK: cancel toInt fromInt.
+Proof.
+  move=> bs; apply/eqP; move: bs.
+  by apply/forallP: toIntK_valid.
+Qed.
+
+(** * Injectivity of [fromInt] *)
+
+Definition fromInt_inj_test: bool := 
+  forallInt (fun x =>
+    forallInt (fun y => 
+      (fromInt x == fromInt y) ==> (eq x y))).
+
+(* Validation condition:
+   Experimentally, [fromInt] must be injective *)
+Axiom fromInt_inj_valid: fromInt_inj_test.
+
+Lemma fromInt_inj: injective fromInt.
+Proof.
+  move=> x y /eqP H.
+  apply/eqIntP.
+  move: H; apply/implyP.
+  move: x; apply/(forallIntP (fun x => (fromInt x == fromInt y) ==> eq x y)).
+  move: y; apply/forallIntP. 
+  exact: fromInt_inj_valid.
+Qed.
+
+Lemma fromIntK: cancel fromInt toInt.
+Proof.
+  apply: inj_can_sym; auto using toIntK, fromInt_inj.
+Qed.
+
+(** * Bijection [Int] vs. [BITS wordsize] *)
+
+Lemma fromInt_bij: bijective fromInt.
+Proof.
+  split with (g := toInt);
+  auto using toIntK, fromIntK.
+Qed.
+
+
+(** * Representation relation *)
+
+(** We say that an [n : Int] is the representation of a bitvector
+[bs : BITS ] if they satisfy the axiom [repr_native]. Morally, it
+means that both represent the same number (ie. the same 
+booleans). *)
+
+Definition native_repr (i: Int)(bs: BITS wordsize): bool
+  := eq i (toInt bs).
+
+(** * Representation lemma: equality *)
+
+Lemma eq_adj: forall i bs, eq i (toInt bs) = (fromInt i == bs) .
+Proof.
+  move=> i bs.
+  apply/eqIntP/eqP; intro; subst;
+  auto using fromIntK, toIntK.
+Qed.
+  
+Lemma eq_repr:
+  forall i i' bs bs',
+    native_repr i bs -> native_repr i' bs' ->
+    (eq i i') = (bs == bs').
+Proof.
+  move=> i i' bs bs'.
+  rewrite /native_repr.
+  repeat (rewrite eq_adj; move/eqP=> <-).
+  apply/eqIntP/eqP; intro; subst; auto using fromInt_inj.
+Qed.
+
+(** * Representation lemma: individuals *)
+
+Definition zero_test: bool 
+  := eq zero (toInt #0).
+  
+(* Validation condition:
+   bit vector [#0] corresponds to machine [0] *)
+Axiom zero_valid: zero_test.
+
+Lemma zero_repr: native_repr zero #0.
+Proof. apply zero_valid. Qed.
+  
+Definition one_test: bool
+  := eq one (toInt #1).
+
+(* Validation condition:
+   bit vector [#1] corresponds to machine [1] *)
+Axiom one_valid: one_test.
+
+Lemma one_repr: native_repr one #1.
+Proof. apply one_valid. Qed.
+
+(** * Representation lemma: successor *)
+
+Definition succ_test: bool
+  := forallInt (fun i =>
+     native_repr (succ i) (incB (fromInt i))).
+
+(* Validation condition:
+    [succ "n"] corresponds to machine [n + 1] *)
+Axiom succ_valid: succ_test.
+
+Lemma succ_repr: forall i bs,
+    native_repr i bs -> native_repr (succ i) (incB bs).
+Proof.
+  move=> i ?.
+  rewrite /native_repr eq_adj.
+  move/eqP=> <-.
+  apply/eqIntP.
+  move: i; apply/forallIntP.
+  apply succ_valid.
+Qed.
+
+(** * Representation lemma: negation *)
+
+Definition lnot_test: bool
+  := forallInt (fun i =>
+       native_repr (lnot i) (invB (fromInt i))).
+
+(* Validation condition:
+    [invB "n"] corresponds to machine [lnot n] *)
+Axiom lnot_valid: lnot_test.
+
+Lemma lnot_repr: forall i bs,
+    native_repr i bs -> native_repr (lnot i) (invB bs).
+Proof.
+  move=> i ?.
+  rewrite /native_repr eq_adj.
+  move/eqP=> <-.
+  apply/eqIntP.
+  move: i; apply/forallIntP.
+  apply lnot_valid.
+Qed.
+
+(** * Representation lemma: logical and *)
+
+Definition land_test: bool
+  := forallInt (fun i =>
+       forallInt (fun i' =>
+         native_repr (land i i') (andB (fromInt i) (fromInt i')))).
+
+(* Validation condition:
+    [land "m" "n"] corresponds to machine [m land n] *)
+Axiom land_valid: land_test.
+
+Lemma land_repr: forall i i' bs bs',
+    native_repr i bs -> native_repr i' bs' ->
+    native_repr (land i i') (andB bs bs').
+Proof.
+  move=> i i' ? ?.
+  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  apply/eqIntP.
+  move: i'; apply/(forallIntP (fun i' => eq (land i i') (toInt (andB (fromInt i) (fromInt i'))))).
+  move: i; apply/forallIntP.
+  apply land_valid.
+Qed.
+
+(** * Representation lemma: logical or *)
+
+Definition lor_test: bool. Admitted.
+
+(* Validation condition:
+    [lor "m" "n"] corresponds to machine [m lor n] *)
+Axiom lor_valid: lor_test.
+
+Lemma lor_repr: forall i i' bs bs',
+    native_repr i bs -> native_repr i' bs' ->
+    native_repr (lor i i') (orB bs bs').
+Admitted.
+
+(** * Representation lemma: logical xor *)
+
+Definition lxor_test: bool. Admitted.
+
+(* Validation condition:
+    [lxor "m" "n"] corresponds to machine [m lxor n] *)
+Axiom lxor_valid: lxor_test.
+
+
+Lemma lxor_repr: forall i i' bs bs',
+    native_repr i bs -> native_repr i' bs' ->
+    native_repr (lxor i i') (xorB bs bs').
+Admitted. 
+
+(** * Representation of naturals *)
+
+(** We extend the refinement relation (by composition) to natural
+numbers, going through a [BITS wordsize] word. *)
+
+Definition natural_repr (i: Int)(n: nat): bool :=
+  [exists bs, native_repr i bs && (# n == bs)].
+
+(** * Representation lemma: logical shift right *)
+
+(* TODO: this one might be tricky: get nat on one side, int on the other *)
+Definition lsr_test: bool. Admitted.
+
+(* Validation condition:
+    [lsr "m" "n"] corresponds to machine [m lsr n] *)
+Axiom lsr_valid: lsr_test.
+
+Lemma lsr_repr: forall i j bs k,
+    native_repr i bs -> natural_repr j k ->
+    native_repr (lsr i j) (shrBn bs k).
+Admitted.
+
+(** * Representation lemma: logical shift left *)
+
+(* TODO: this one might be tricky: get nat on one side, int on the other *)
+
+Definition lsl_test: bool. Admitted.
+
+(* Validation condition:
+    [lsl "m" "n"] corresponds to machine [m lsl n] *)
+Axiom lsl_valid: lsl_test.
+
+Lemma lsl_repr: forall i j bs k,
+    native_repr i bs -> natural_repr j k ->
+    native_repr (lsl i j) (shlBn bs k).
+Admitted.
+
+(** * Representation lemma: negation *)
+
+Definition lneg_test: bool. Admitted.
+
+(* Validation condition:
+    [negB "m"] corresponds to machine [- m] *)
+Axiom lneg_valid: lneg_test.
+
+Lemma lneg_repr: forall i bs,
+    native_repr i bs -> native_repr (neg i) (negB bs).
+Admitted.
+
+(** * Representation lemma: decrement *)
+
+Definition dec_test: bool. Admitted.
+
+(* Validation condition:
+    [decB "m"] corresponds to machine [dec m] *)
+Axiom dec_valid: dec_test.
+
+Lemma dec_repr: forall i bs,
+    native_repr i bs -> native_repr (dec i) (decB bs).
+Admitted.
+
+(** * Representation lemma: addition *)
+
+Definition add_test: bool. Admitted.
+
+(* Validation condition:
+    [decB "m"] corresponds to machine [dec m] *)
+Axiom add_valid: add_test.
+
+Lemma add_repr:
+  forall i i' bs bs',
+    native_repr i bs -> native_repr i' bs' ->
+    native_repr (add i i') (addB bs bs').
+Admitted.
+
+
+(** Extract the tests: they should all return true! *)
+
+Require Import ExtrOcamlBasic.
+
+
+Definition tests
+  := foldr (andb) true [:: toIntK_test ;
+                         fromInt_inj_test ;
+                         zero_test ;
+                         one_test ;
+                         succ_test ;
+                         lnot_test ; 
+                         land_test ;
+                         lor_test ;
+                         lxor_test ;
+                         lsr_test ;
+                         lsl_test ;
+                         lneg_test ;
+                         dec_test ;
+                         add_test ].
+
+Extraction "axioms.ml"  tests. 

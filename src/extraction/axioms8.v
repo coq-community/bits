@@ -5,6 +5,22 @@ From Ssreflect
 From Bits
      Require Import spec.spec spec.operations spec.operations.properties.
 
+(* TODO:
+     * Complete missing lemmas
+
+     * Fix invalid extractions (addition is wrong on 63bits arch, for instance)
+
+     * Define as a functor over wordsize (and forallInt) and
+       instanciate at 8, 16, and 32 bits 
+
+     * Implement an efficient [forall] for bitvectors, prove
+       equivalence with finType's forall.
+
+     * Either get an efficient version of the tests below, or
+       implement them in OCaml
+
+*)
+
 (** * An axiomatization of OCaml native integers *)
 
 

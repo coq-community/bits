@@ -37,7 +37,7 @@ Axiom forallInt : (Int -> bool) -> bool.
 Extract Inlined Constant forallInt => "forall_int".
 
 Axiom eq: Int -> Int -> bool.
-Extract Inlined Constant eq => "(fun x y -> (x land ((1 lsl 8) - 1)) = (y land ((1 lsl 8) - 1)))".
+Extract Inlined Constant eq => "(=)".
 
 Section Trust.
 
@@ -60,13 +60,13 @@ Axiom one : Int.
 Extract Inlined Constant one => "1".
 
 Axiom succ : Int -> Int.
-Extract Constant succ => "(fun x -> x + 1)".
+Extract Constant succ => "(fun x -> (x + 1) land 0xff)".
 
 Axiom lor: Int -> Int -> Int.
 Extract Inlined Constant lor => "(lor)".
 
 Axiom lsl: Int -> Int -> Int.
-Extract Inlined Constant lsl => "(lsl)".
+Extract Inlined Constant lsl => "(fun x y -> (x lsl y) land 0xff)".
 
 Axiom land: Int -> Int -> Int.
 Extract Inlined Constant land => "(land)".
@@ -78,19 +78,19 @@ Axiom lsr: Int -> Int -> Int.
 Extract Inlined Constant lsr => "(lsr)".
 
 Axiom neg: Int -> Int.
-Extract Inlined Constant neg => "-".
+Extract Inlined Constant neg => "(fun x -> (-x) land 0xff)".
 
 Axiom lnot: Int -> Int.
-Extract Inlined Constant lnot => "lnot".
+Extract Inlined Constant lnot => "(fun x -> (lnot x) land 0xff)".
 
 Axiom lxor: Int -> Int -> Int.
 Extract Inlined Constant lxor => "(lxor)".
 
 Axiom dec: Int -> Int.
-Extract Constant dec => "(fun x -> x - 1)".
+Extract Constant dec => "(fun x -> (x - 1) land 0xff)".
 
 Axiom add: Int -> Int -> Int.
-Extract Inlined Constant add => "(+)".
+Extract Inlined Constant add => "(fun x y -> (x + y) land 0xff)".
 
 (* Conversion between machine integers and bit vectors *)
 

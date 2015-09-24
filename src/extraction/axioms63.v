@@ -31,7 +31,7 @@ word. *)
 
 Definition natural_repr: Int63 -> nat -> Prop :=
   fun i n =>
-    n < 2 ^ wordsize /\ exists bs, native_repr i bs /\ # n = bs.
+    exists bs, native_repr i bs /\ # n = bs.
 
 
 (** We axiomatize the following operations from OCaml: *)
@@ -85,7 +85,7 @@ Axiom lsr: Int63 -> Int63 -> Int63.
 Extract Inlined Constant lsr => "(lsr)".
 
 Axiom lsr_repr:
-  forall i j bs k,
+  forall i j bs k, k < wordsize ->
     native_repr i bs -> natural_repr j k ->
     native_repr (lsr i j) (shrBn bs k).
 
@@ -94,7 +94,7 @@ Axiom lsl: Int63 -> Int63 -> Int63.
 Extract Inlined Constant lsl => "(lsl)".
 
 Axiom lsl_repr:
-  forall i j bs k,
+  forall i j bs k, k < wordsize ->
     native_repr i bs -> natural_repr j k ->
     native_repr (lsl i j) (shlBn bs k).
 

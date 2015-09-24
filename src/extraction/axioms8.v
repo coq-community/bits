@@ -348,7 +348,7 @@ Qed.
 numbers, going through a [BITS wordsize] word. *)
 
 Definition natural_repr (i: Int)(n: nat): bool :=
-  (n < 2 ^ wordsize) && [exists bs, native_repr i bs && (# n == bs)].
+  [exists bs, native_repr i bs && (# n == bs)].
 
 (** * Representation lemma: logical shift right *)
 
@@ -368,7 +368,7 @@ Proof.
   move=> i i' ? k ltn_k.
   rewrite /native_repr eq_adj; move/eqP=> <-.
   rewrite /natural_repr.
-  move/andP=> [_ /existsP [bs' /andP [H /eqP H']]].
+  move/existsP=> [bs' /andP [H /eqP H']].
   rewrite /native_repr eq_adj in H.
   move/eqP: H=> H.
   apply/eqIntP.
@@ -412,7 +412,7 @@ Proof.
   move=> i i' ? k ltn_k.
   rewrite /native_repr eq_adj; move/eqP=> <-.
   rewrite /natural_repr.
-  move/andP=> [_ /existsP [bs' /andP [H /eqP H']]].
+  move/existsP=> [bs' /andP [H /eqP H']].
   rewrite /native_repr eq_adj in H.
   move/eqP: H=> H.
   apply/eqIntP.

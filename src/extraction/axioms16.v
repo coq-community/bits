@@ -24,7 +24,7 @@ From Bits
 (** * An axiomatization of OCaml native integers *)
 
 
-Definition wordsize := 8.
+Definition wordsize := 16.
 
 Axiom Int: Type.
 Extract Inlined Constant Int => "int".
@@ -60,13 +60,13 @@ Axiom one : Int.
 Extract Inlined Constant one => "1".
 
 Axiom succ : Int -> Int.
-Extract Constant succ => "(fun x -> (x + 1) land 0xff)".
+Extract Constant succ => "(fun x -> (x + 1) land 0xffff)".
 
 Axiom lor: Int -> Int -> Int.
 Extract Inlined Constant lor => "(lor)".
 
 Axiom lsl: Int -> Int -> Int.
-Extract Inlined Constant lsl => "(fun x y -> (x lsl y) land 0xff)".
+Extract Inlined Constant lsl => "(fun x y -> (x lsl y) land 0xffff)".
 
 Axiom land: Int -> Int -> Int.
 Extract Inlined Constant land => "(land)".
@@ -78,19 +78,19 @@ Axiom lsr: Int -> Int -> Int.
 Extract Inlined Constant lsr => "(lsr)".
 
 Axiom neg: Int -> Int.
-Extract Inlined Constant neg => "(fun x -> (-x) land 0xff)".
+Extract Inlined Constant neg => "(fun x -> (-x) land 0xffff)".
 
 Axiom lnot: Int -> Int.
-Extract Inlined Constant lnot => "(fun x -> (lnot x) land 0xff)".
+Extract Inlined Constant lnot => "(fun x -> (lnot x) land 0xffff)".
 
 Axiom lxor: Int -> Int -> Int.
 Extract Inlined Constant lxor => "(lxor)".
 
 Axiom dec: Int -> Int.
-Extract Constant dec => "(fun x -> (x - 1) land 0xff)".
+Extract Constant dec => "(fun x -> (x - 1) land 0xffff)".
 
 Axiom add: Int -> Int -> Int.
-Extract Inlined Constant add => "(fun x y -> (x + y) land 0xff)".
+Extract Inlined Constant add => "(fun x y -> (x + y) land 0xffff)".
 
 (* Conversion between machine integers and bit vectors *)
 
@@ -526,4 +526,4 @@ Definition tests
                          dec_test ;
                          add_test ].
 
-Extraction "axioms8.ml" tests.
+Extraction "axioms16.ml" tests.

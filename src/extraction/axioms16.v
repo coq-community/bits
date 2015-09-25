@@ -94,84 +94,84 @@ Extract Inlined Constant add => "(fun x y -> (x + y) land 0xffff)".
 
 (* Conversion between machine integers and bit vectors *)
 
-Fixpoint PtoInt (p: seq bool): Int :=
+Fixpoint PbitsToInt (p: seq bool): Int :=
   match p with
-    | true :: p => lor one (lsl (PtoInt p) one)
-    | false :: p => lsl (PtoInt p) one
+    | true :: p => lor one (lsl (PbitsToInt p) one)
+    | false :: p => lsl (PbitsToInt p) one
     | [::] => zero
   end.
 
-Definition toInt (bs: BITS wordsize): Int :=
+Definition bitsToInt (bs: BITS wordsize): Int :=
   match splitmsb bs with
-    | (false, bs') => PtoInt bs'
-    | (true, bs') => neg (PtoInt (negB bs))
+    | (false, bs') => PbitsToInt bs'
+    | (true, bs') => neg (PbitsToInt (negB bs))
   end.
 
-Fixpoint fromIntS (k: nat)(n: Int): seq bool :=
+Fixpoint bitsFromIntS (k: nat)(n: Int): seq bool :=
   match k with
     | 0 => [::]
     | k.+1 =>
-      let p := fromIntS k (lsr n one) in
+      let p := bitsFromIntS k (lsr n one) in
       (eq (land n one) one) :: p                           
   end.
 
-Lemma fromIntP {k} (n: Int): size (fromIntS k n) == k.
+Lemma bitsFromIntP {k} (n: Int): size (bitsFromIntS k n) == k.
 Proof.
   elim: k n => // [k IH] n //=.
   rewrite eqSS //.
 Qed.
 
-Canonical fromInt (n: Int): BITS wordsize
-  := Tuple (fromIntP n).
+Canonical bitsFromInt (n: Int): BITS wordsize
+  := Tuple (bitsFromIntP n).
 
-(** * Cancelation of [toInt] on [fromInt] *)
+(** * Cancelation of [bitsToInt] on [bitsFromInt] *)
 
-Definition toIntK_test: bool :=
- [forall bs , fromInt (toInt bs) == bs ].
+Definition bitsToIntK_test: bool :=
+ [forall bs , bitsFromInt (bitsToInt bs) == bs ].
 
 (* Validation condition:
-    Experimentally, [toInt] must be cancelled by [fromInt] *)
-Axiom toIntK_valid: toIntK_test.
+    Experimentally, [bitsToInt] must be cancelled by [bitsFromInt] *)
+Axiom bitsToIntK_valid: bitsToIntK_test.
 
-Lemma toIntK: cancel toInt fromInt.
+Lemma bitsToIntK: cancel bitsToInt bitsFromInt.
 Proof.
   move=> bs; apply/eqP; move: bs.
-  by apply/forallP: toIntK_valid.
+  by apply/forallP: bitsToIntK_valid.
 Qed.
 
-(** * Injectivity of [fromInt] *)
+(** * Injectivity of [bitsFromInt] *)
 
-Definition fromInt_inj_test: bool := 
+Definition bitsFromInt_inj_test: bool := 
   forallInt (fun x =>
     forallInt (fun y => 
-      (fromInt x == fromInt y) ==> (eq x y))).
+      (bitsFromInt x == bitsFromInt y) ==> (eq x y))).
 
 (* Validation condition:
-   Experimentally, [fromInt] must be injective *)
-Axiom fromInt_inj_valid: fromInt_inj_test.
+   Experimentally, [bitsFromInt] must be injective *)
+Axiom bitsFromInt_inj_valid: bitsFromInt_inj_test.
 
-Lemma fromInt_inj: injective fromInt.
+Lemma bitsFromInt_inj: injective bitsFromInt.
 Proof.
   move=> x y /eqP H.
   apply/eqIntP.
   move: H; apply/implyP.
-  move: y; apply/(forallIntP (fun y => (fromInt x == fromInt y) ==> eq x y)).
+  move: y; apply/(forallIntP (fun y => (bitsFromInt x == bitsFromInt y) ==> eq x y)).
   move=> y; apply idP.
-  move: x; apply/forallIntP; last by apply fromInt_inj_valid.
+  move: x; apply/forallIntP; last by apply bitsFromInt_inj_valid.
   move=> x; apply idP.
 Qed.
 
-Lemma fromIntK: cancel fromInt toInt.
+Lemma bitsFromIntK: cancel bitsFromInt bitsToInt.
 Proof.
-  apply: inj_can_sym; auto using toIntK, fromInt_inj.
+  apply: inj_can_sym; auto using bitsToIntK, bitsFromInt_inj.
 Qed.
 
 (** * Bijection [Int] vs. [BITS wordsize] *)
 
-Lemma fromInt_bij: bijective fromInt.
+Lemma bitsFromInt_bij: bijective bitsFromInt.
 Proof.
-  split with (g := toInt);
-  auto using toIntK, fromIntK.
+  split with (g := bitsToInt);
+  auto using bitsToIntK, bitsFromIntK.
 Qed.
 
 
@@ -183,15 +183,15 @@ means that both represent the same number (ie. the same
 booleans). *)
 
 Definition native_repr (i: Int)(bs: BITS wordsize): bool
-  := eq i (toInt bs).
+  := eq i (bitsToInt bs).
 
 (** * Representation lemma: equality *)
 
-Lemma eq_adj: forall i bs, eq i (toInt bs) = (fromInt i == bs) .
+Lemma eq_adj: forall i bs, eq i (bitsToInt bs) = (bitsFromInt i == bs) .
 Proof.
   move=> i bs.
   apply/eqIntP/eqP; intro; subst;
-  auto using fromIntK, toIntK.
+  auto using bitsFromIntK, bitsToIntK.
 Qed.
   
 Lemma eq_repr:
@@ -202,13 +202,13 @@ Proof.
   move=> i i' bs bs'.
   rewrite /native_repr.
   repeat (rewrite eq_adj; move/eqP=> <-).
-  apply/eqIntP/eqP; intro; subst; auto using fromInt_inj.
+  apply/eqIntP/eqP; intro; subst; auto using bitsFromInt_inj.
 Qed.
 
 (** * Representation lemma: individuals *)
 
 Definition zero_test: bool 
-  := eq zero (toInt #0).
+  := eq zero (bitsToInt #0).
   
 (* Validation condition:
    bit vector [#0] corresponds to machine [0] *)
@@ -218,7 +218,7 @@ Lemma zero_repr: native_repr zero #0.
 Proof. apply zero_valid. Qed.
   
 Definition one_test: bool
-  := eq one (toInt #1).
+  := eq one (bitsToInt #1).
 
 (* Validation condition:
    bit vector [#1] corresponds to machine [1] *)
@@ -231,7 +231,7 @@ Proof. apply one_valid. Qed.
 
 Definition succ_test: bool
   := forallInt (fun i =>
-     native_repr (succ i) (incB (fromInt i))).
+     native_repr (succ i) (incB (bitsFromInt i))).
 
 (* Validation condition:
     [succ "n"] corresponds to machine [n + 1] *)
@@ -252,7 +252,7 @@ Qed.
 
 Definition lnot_test: bool
   := forallInt (fun i =>
-       native_repr (lnot i) (invB (fromInt i))).
+       native_repr (lnot i) (invB (bitsFromInt i))).
 
 (* Validation condition:
     [invB "n"] corresponds to machine [lnot n] *)
@@ -274,7 +274,7 @@ Qed.
 Definition land_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         native_repr (land i i') (andB (fromInt i) (fromInt i')))).
+         native_repr (land i i') (andB (bitsFromInt i) (bitsFromInt i')))).
 
 (* Validation condition:
     [land "m" "n"] corresponds to machine [m land n] *)
@@ -287,7 +287,7 @@ Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
   apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (land i i') (toInt (andB (fromInt i) (fromInt i'))))).
+  move: i'; apply/(forallIntP (fun i' => eq (land i i') (bitsToInt (andB (bitsFromInt i) (bitsFromInt i'))))).
   move=> i'; apply/eqIntP.
   move: i; apply/forallIntP; last by apply land_valid.
   move=> i'; apply idP.
@@ -298,7 +298,7 @@ Qed.
 Definition lor_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         native_repr (lor i i') (orB (fromInt i) (fromInt i')))).
+         native_repr (lor i i') (orB (bitsFromInt i) (bitsFromInt i')))).
 
 (* Validation condition:
     [lor "m" "n"] corresponds to machine [m lor n] *)
@@ -311,7 +311,7 @@ Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
   apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (lor i i') (toInt (orB (fromInt i) (fromInt i'))))).
+  move: i'; apply/(forallIntP (fun i' => eq (lor i i') (bitsToInt (orB (bitsFromInt i) (bitsFromInt i'))))).
   move=> i'; apply/eqIntP.
   move: i; apply/forallIntP; last by apply lor_valid.
   move=> i'; apply idP.
@@ -322,7 +322,7 @@ Qed.
 Definition lxor_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         native_repr (lxor i i') (xorB (fromInt i) (fromInt i')))).
+         native_repr (lxor i i') (xorB (bitsFromInt i) (bitsFromInt i')))).
 
 (* Validation condition:
     [lxor "m" "n"] corresponds to machine [m lxor n] *)
@@ -336,7 +336,7 @@ Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
   apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (lxor i i') (toInt (xorB (fromInt i) (fromInt i'))))).
+  move: i'; apply/(forallIntP (fun i' => eq (lxor i i') (bitsToInt (xorB (bitsFromInt i) (bitsFromInt i'))))).
   move=> i'; apply/eqIntP.
   move: i; apply/forallIntP; last by apply lxor_valid.
   move=> i'; apply idP.
@@ -355,7 +355,7 @@ Definition natural_repr (i: Int)(n: nat): bool :=
 Definition lsr_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         (toNat (fromInt i') < wordsize) ==> native_repr (lsr i i') (shrBn (fromInt i) (toNat (fromInt i'))))).
+         (toNat (bitsFromInt i') < wordsize) ==> native_repr (lsr i i') (shrBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
 
 (* Validation condition:
     [lsr "m" "n"] corresponds to machine [m lsr n] *)
@@ -372,7 +372,7 @@ Proof.
   rewrite /native_repr eq_adj in H.
   move/eqP: H=> H.
   apply/eqIntP.
-  have Hk: k = toNat (fromInt i').
+  have Hk: k = toNat (bitsFromInt i').
     rewrite H.
     have ->: k = toNat (fromNat (n := wordsize) k).
       rewrite toNat_fromNatBounded=> //.
@@ -381,7 +381,7 @@ Proof.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (fromInt i') < wordsize) ==> (eq (lsr i i') (toInt (shrBn (fromInt i) (toNat ((fromInt i')))))))).
+  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') < wordsize) ==> (eq (lsr i i') (bitsToInt (shrBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
@@ -399,7 +399,7 @@ Qed.
 Definition lsl_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         (toNat (fromInt i') < wordsize) ==> native_repr (lsl i i') (shlBn (fromInt i) (toNat (fromInt i'))))).
+         (toNat (bitsFromInt i') < wordsize) ==> native_repr (lsl i i') (shlBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
 
 (* Validation condition:
     [lsl "m" "n"] corresponds to machine [m lsl n] *)
@@ -416,7 +416,7 @@ Proof.
   rewrite /native_repr eq_adj in H.
   move/eqP: H=> H.
   apply/eqIntP.
-  have Hk: k = toNat (fromInt i').
+  have Hk: k = toNat (bitsFromInt i').
     rewrite H.
     have ->: k = toNat (fromNat (n := wordsize) k).
       rewrite toNat_fromNatBounded=> //.
@@ -425,7 +425,7 @@ Proof.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (fromInt i') < wordsize) ==> (eq (lsl i i') (toInt (shlBn (fromInt i) (toNat ((fromInt i')))))))).
+  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') < wordsize) ==> (eq (lsl i i') (bitsToInt (shlBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
@@ -442,7 +442,7 @@ Qed.
 
 Definition neg_test: bool
   := forallInt (fun i =>
-       native_repr (neg i) (negB (fromInt i))).
+       native_repr (neg i) (negB (bitsFromInt i))).
 
 (* Validation condition:
     [negB "m"] corresponds to machine [- m] *)
@@ -463,7 +463,7 @@ Qed.
 
 Definition dec_test: bool
   := forallInt (fun i =>
-       native_repr (dec i) (decB (fromInt i))).
+       native_repr (dec i) (decB (bitsFromInt i))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
@@ -485,7 +485,7 @@ Qed.
 Definition add_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         native_repr (add i i') (addB (fromInt i) (fromInt i')))).
+         native_repr (add i i') (addB (bitsFromInt i) (bitsFromInt i')))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
@@ -499,7 +499,7 @@ Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
   apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (add i i') (toInt (addB (fromInt i) (fromInt i'))))).
+  move: i'; apply/(forallIntP (fun i' => eq (add i i') (bitsToInt (addB (bitsFromInt i) (bitsFromInt i'))))).
   move=> i'; apply/eqIntP.
   move: i; apply/forallIntP; last by apply add_valid.
   move=> i'; apply idP.
@@ -511,8 +511,8 @@ Require Import ExtrOcamlBasic.
 
 
 Definition tests
-  := foldr (andb) true [:: toIntK_test ;
-                         fromInt_inj_test ;
+  := foldr (andb) true [:: bitsToIntK_test ;
+                         bitsFromInt_inj_test ;
                          zero_test ;
                          one_test ;
                          succ_test ;

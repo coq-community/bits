@@ -1,0 +1,28 @@
+152c152
+<   simplPred (fun x -> true)
+---
+>   Obj.magic simplPred (fun x -> true)
+680c680
+<   { Choice.base = (Equality.coq_class nat_eqType); Choice.mixin =
+---
+>   Obj.magic { Choice.base = (Equality.coq_class nat_eqType); Choice.mixin =
+686c686
+<   canChoiceMixin nat_choiceType (Obj.magic nat_of_bool) (Obj.magic odd)
+---
+>   Obj.magic canChoiceMixin nat_choiceType (Obj.magic nat_of_bool) (Obj.magic odd)
+691c691
+<   { Choice.base = (Equality.coq_class bool_eqType); Choice.mixin =
+---
+>   Obj.magic { Choice.base = (Equality.coq_class bool_eqType); Choice.mixin =
+798c798
+<   { Countable.base = (Choice.coq_class nat_choiceType); Countable.mixin =
+---
+>   Obj.magic { Countable.base = (Choice.coq_class nat_choiceType); Countable.mixin =
+804c804
+<   canCountMixin nat_countType (Obj.magic nat_of_bool) (Obj.magic odd)
+---
+>   Obj.magic canCountMixin nat_countType (Obj.magic nat_of_bool) (Obj.magic odd)
+951c951
+<   { Finite.base = (Choice.coq_class bool_choiceType); Finite.mixin =
+---
+>   Obj.magic { Finite.base = (Choice.coq_class bool_choiceType); Finite.mixin =

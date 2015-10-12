@@ -34,7 +34,7 @@ Extract Inlined Constant Int => "int".
 their associated  reflection principles in Coq. *)
 
 Axiom forallInt : (Int -> bool) -> bool.
-Extract Inlined Constant forallInt => "forall_int".
+Extract Inlined Constant forallInt => "Forall.forall_int".
 
 Axiom eq: Int -> Int -> bool.
 Extract Inlined Constant eq => "(=)".
@@ -526,4 +526,6 @@ Definition tests
                          dec_test ;
                          add_test ].
 
+Cd "src/extraction".
 Extraction "axioms8.ml" tests.
+Cd "../..".

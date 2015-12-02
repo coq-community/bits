@@ -355,13 +355,13 @@ Definition natural_repr (i: Int)(n: nat): bool :=
 Definition lsr_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         (toNat (bitsFromInt i') < wordsize) ==> native_repr (lsr i i') (shrBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
+         (toNat (bitsFromInt i') <= wordsize) ==> native_repr (lsr i i') (shrBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
 
 (* Validation condition:
     [lsr "m" "n"] corresponds to machine [m lsr n] *)
 Axiom lsr_valid: lsr_test.
 
-Lemma lsr_repr: forall i j bs k, k < wordsize ->
+Lemma lsr_repr: forall i j bs k, k <= wordsize ->
     native_repr i bs -> natural_repr j k ->
     native_repr (lsr i j) (shrBn bs k).
 Proof.
@@ -376,12 +376,12 @@ Proof.
     rewrite H.
     have ->: k = toNat (fromNat (n := wordsize) k).
       rewrite toNat_fromNatBounded=> //.
-      by apply (ltn_trans (n := wordsize)).
+      by apply (leq_ltn_trans (n := wordsize)).
     by rewrite H'.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') < wordsize) ==> (eq (lsr i i') (bitsToInt (shrBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
+  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') <= wordsize) ==> (eq (lsr i i') (bitsToInt (shrBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
@@ -399,13 +399,13 @@ Qed.
 Definition lsl_test: bool
   := forallInt (fun i =>
        forallInt (fun i' =>
-         (toNat (bitsFromInt i') < wordsize) ==> native_repr (lsl i i') (shlBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
+         (toNat (bitsFromInt i') <= wordsize) ==> native_repr (lsl i i') (shlBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
 
 (* Validation condition:
     [lsl "m" "n"] corresponds to machine [m lsl n] *)
 Axiom lsl_valid: lsl_test.
 
-Lemma lsl_repr: forall i j bs k, k < wordsize ->
+Lemma lsl_repr: forall i j bs k, k <= wordsize ->
     native_repr i bs -> natural_repr j k ->
     native_repr (lsl i j) (shlBn bs k).
 Proof.
@@ -420,12 +420,12 @@ Proof.
     rewrite H.
     have ->: k = toNat (fromNat (n := wordsize) k).
       rewrite toNat_fromNatBounded=> //.
-      by apply (ltn_trans (n := wordsize)).
+      by apply (leq_ltn_trans (n := wordsize)).
     by rewrite H'.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') < wordsize) ==> (eq (lsl i i') (bitsToInt (shlBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
+  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') <= wordsize) ==> (eq (lsl i i') (bitsToInt (shlBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.

@@ -6,7 +6,9 @@ From Coq
 (*Require Import common.tuplehelp common.nathelp.*)
 From Ssreflect
      Require Import ssreflect ssrfun ssrbool eqtype ssrnat
-                    seq tuple fintype div zmodp ssralg.
+                    seq fintype.
+From MathComp
+    Require Import tuple div zmodp ssralg.
 Require Import ssrextra.nat ssrextra.tuple.
 Require Import spec.spec.
 

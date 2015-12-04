@@ -1,12 +1,12 @@
 opam-version: "1.2"
-name: "coq:bits"
+name: "coq-bits"
 version: "0.1"
-maintainer: "Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr>"
+maintainer: "Arthur Blot <arthur.blot@ens-lyon.fr>"
 authors: ["Andrew Kennedy <akenn@microsoft.com>"
           "Arthur Blot <arthur.blot@ens-lyon.fr>"
           "Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr>"]
-homepage: "https://gforge.inria.fr/projects/coq-bits/"
-bug-reports: "https://gforge.inria.fr/projects/coq-bits/"
+homepage: "https://github.com/artart78/coq-bits/"
+bug-reports: "https://github.com/artart78/coq-bits/"
 license: "Apache"
 build: [
 ["coq_makefile" "-f" "_CoqProject" "-o" "Makefile"]

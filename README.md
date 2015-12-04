@@ -6,6 +6,10 @@ This library has been extracted from Andrew Kennedy et al. 'x86proved'.
 
 https://x86proved.codeplex.com/SourceControl/network/forks/andrewjkennedy/x86proved/latest#src/bits.v
 
+## Installation
+
+Check https://github.com/artart78/coq-bitset/ for installation instructions.
+
 ## Using the library
 
 To import the main library, do:

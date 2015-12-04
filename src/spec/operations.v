@@ -4,7 +4,9 @@
   ===========================================================================*)
 
 From Ssreflect
-    Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple.
+    Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq.
+From MathComp
+    Require Import tuple.
 Require Import spec.
 
 Set Implicit Arguments.

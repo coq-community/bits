@@ -2,7 +2,9 @@
     Various helpers for halving, double and powers of 2
   ---------------------------------------------------------------------------*)
 From Ssreflect
-    Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple zmodp fintype div.
+    Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype.
+From MathComp
+    Require Import tuple zmodp div.
 
 Set Implicit Arguments.
 Unset Strict Implicit.

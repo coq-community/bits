@@ -2,7 +2,9 @@
   Proofs of properties of arithmetic and logical operations on n-bit words
   ===========================================================================*)
 From Ssreflect
-    Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple zmodp fintype div.
+    Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq fintype.
+From MathComp
+    Require Import tuple zmodp div.
 Require Import ssrextra.tuple ssrextra.nat.
 Require Import spec spec.properties operations.
 
@@ -205,7 +207,7 @@ destruct b. simpl. by rewrite uphalf_double.
 by rewrite add0n half_double.
 Qed.
 
-Require Import Ssreflect.ssralg.
+Require Import MathComp.ssralg.
 Import GRing.Theory.
 
 (*---------------------------------------------------------------------------
@@ -1598,7 +1600,7 @@ Qed.
     Algebraic structures
   ---------------------------------------------------------------------------*)
 
-Require Import Ssreflect.choice Ssreflect.fintype Ssreflect.fingroup Ssreflect.finalg.
+Require Import Ssreflect.choice Ssreflect.fintype MathComp.fingroup MathComp.finalg.
 
 Section Structures.
 

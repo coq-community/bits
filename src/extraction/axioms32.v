@@ -1,7 +1,9 @@
 From Coq
      Require Import ZArith.ZArith.
 From Ssreflect
-     Require Import ssreflect ssrbool eqtype ssrnat seq tuple fintype ssrfun.
+     Require Import ssreflect ssrbool eqtype ssrnat seq fintype ssrfun.
+From MathComp
+     Require Import tuple.
 From Bits
      Require Import bits.
 

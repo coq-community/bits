@@ -15,8 +15,10 @@
 From Coq
     Require Import ZArith.ZArith Strings.String.
 From Ssreflect
-     Require Import ssreflect ssrfun ssrbool eqtype
-                    ssrnat seq tuple fintype zmodp.
+    Require Import ssreflect ssrfun ssrbool eqtype
+                    ssrnat seq fintype.
+From MathComp
+    Require Import tuple zmodp.
 
 
 (* We represent n-bit words by a tuple of booleans, least-significant

@@ -511,7 +511,7 @@ Qed.
 
 Require Import ExtrOcamlBasic.
 
-
+(*
 Definition tests
   := foldr (andb) true [:: bitsToIntK_test ;
                          bitsFromInt_inj_test ;
@@ -527,6 +527,71 @@ Definition tests
                          neg_test ;
                          dec_test ;
                          add_test ].
+*)
+
+Definition allb s := foldr (andb) true s.
+
+Definition tests
+  := allb
+       [:: bitsToIntK_test ;
+         zero_test ;
+         one_test ;
+         forallInt 
+           (fun x =>
+              allb
+                [:: native_repr (succ x) (incB (bitsFromInt x)) ;
+                  native_repr (lnot x) (invB (bitsFromInt x)) ;
+                  native_repr (neg x) (negB (bitsFromInt x)) ;
+                  native_repr (dec x) (decB (bitsFromInt x)) ;
+                  forallInt
+                    (fun y => 
+                       allb 
+                         [:: (bitsFromInt x == bitsFromInt y) ==> (eq x y) ;
+                           native_repr (land x y) (andB (bitsFromInt x) (bitsFromInt y)) ;
+                           native_repr (lor x y) (orB (bitsFromInt x) (bitsFromInt y)) ;
+                           native_repr (lxor x y) (xorB (bitsFromInt x) (bitsFromInt y)) ;
+                           (toNat (bitsFromInt y) <= wordsize) ==> native_repr (lsr x y) (shrBn (bitsFromInt x) (toNat (bitsFromInt y))) ;
+                           (toNat (bitsFromInt y) <= wordsize) ==> native_repr (lsl x y) (shlBn (bitsFromInt x) (toNat (bitsFromInt y))) ;
+                           native_repr (add x y) (addB (bitsFromInt x) (bitsFromInt y))])])].
+
+Lemma implies_bitsToIntK : tests -> bitsToIntK_test.
+Admitted.
+
+Lemma implies_zero : tests -> zero_test.
+Admitted.
+
+Lemma implies_one : tests -> one_test.
+Admitted.
+
+Lemma implies_succ : tests -> succ_test.
+Admitted.
+
+Lemma implies_lnot : tests -> lnot_test.
+Admitted.
+
+Lemma implies_land : tests -> land_test.
+Admitted.
+
+Lemma implies_lor : tests -> lor_test.
+Admitted.
+
+Lemma implies_lxor : tests -> lxor_test.
+Admitted.
+
+Lemma implies_lsr : tests -> lsr_test.
+Admitted.
+
+Lemma implies_lsl : tests -> lsl_test.
+Admitted.
+
+Lemma implies_neg : tests -> neg_test.
+Admitted.
+
+Lemma implies_dec : tests -> dec_test.
+Admitted.
+
+Lemma implies_add : tests -> add_test.
+Admitted.
 
 Cd "src/extraction".
 Extraction "axioms8.ml" tests.

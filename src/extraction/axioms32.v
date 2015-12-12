@@ -511,22 +511,167 @@ Qed.
 
 Require Import ExtrOcamlBasic.
 
+Definition allb s := foldr (andb) true s.
+
+Definition binop_tests x y :=
+  allb
+    [:: (bitsFromInt x == bitsFromInt y) ==> (eq x y) ;
+      native_repr (land x y) (andB (bitsFromInt x) (bitsFromInt y)) ;
+      native_repr (lor x y) (orB (bitsFromInt x) (bitsFromInt y)) ;
+      native_repr (lxor x y) (xorB (bitsFromInt x) (bitsFromInt y)) ;
+      (toNat (bitsFromInt y) <= wordsize) ==> native_repr (lsr x y) (shrBn (bitsFromInt x) (toNat (bitsFromInt y))) ;
+      (toNat (bitsFromInt y) <= wordsize) ==> native_repr (lsl x y) (shlBn (bitsFromInt x) (toNat (bitsFromInt y))) ;
+      native_repr (add x y) (addB (bitsFromInt x) (bitsFromInt y))].
+
+Definition unop_tests x :=
+  allb
+    [:: native_repr (succ x) (incB (bitsFromInt x)) ;
+      native_repr (lnot x) (invB (bitsFromInt x)) ;
+      native_repr (neg x) (negB (bitsFromInt x)) ;
+      native_repr (dec x) (decB (bitsFromInt x)) ;
+      forallInt
+        (fun y => binop_tests x y)].
 
 Definition tests
-  := foldr (andb) true [:: bitsToIntK_test ;
-                         bitsFromInt_inj_test ;
-                         zero_test ;
-                         one_test ;
-                         succ_test ;
-                         lnot_test ; 
-                         land_test ;
-                         lor_test ;
-                         lxor_test ;
-                         lsr_test ;
-                         lsl_test ;
-                         neg_test ;
-                         dec_test ;
-                         add_test ].
+  := allb
+       [:: bitsToIntK_test ;
+         zero_test ;
+         one_test ;
+         forallInt 
+           (fun x => unop_tests x)].
+
+Lemma implies_unop : tests -> forall x, unop_tests x.
+  move=> /andP [_ /andP [_ /andP[_ /andP [H _]]]] x.
+  rewrite /succ_test.
+  move: H=> /forallIntP H.
+  move: (H unop_tests)=> H'.
+  apply H'=> x'.
+  by apply idP.
+Qed.
+
+Lemma implies_binop : tests -> forall x y, binop_tests x y.
+  move => H x y.
+  have H': unop_tests x by apply implies_unop.
+  move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
+  move: H1=> /forallIntP H1.
+  move: (H1 (binop_tests x))=> H2.
+  apply H2=> y'.
+  by apply idP.
+Qed.
+
+Lemma implies_bitsToIntK : tests -> bitsToIntK_test.
+  by move=> /andP [H _].
+Qed.
+
+Lemma implies_bitsFromInt_inj : tests -> bitsFromInt_inj_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [H' _].
+Qed.
+
+Lemma implies_zero : tests -> zero_test.
+  by move=> /andP [_ /andP [H _]].
+Qed.
+
+Lemma implies_one : tests -> one_test.
+  by move=> /andP [_ /andP [_ /andP[H _]]].
+Qed.
+
+Lemma implies_succ : tests -> succ_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  have H': unop_tests x by apply implies_unop.
+  by move: H'=> /andP [H1 _].
+Qed.
+
+Lemma implies_lnot : tests -> lnot_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  have H': unop_tests x by apply implies_unop.
+  by move: H'=> /andP [_ /andP [H1 _]].
+Qed.
+
+Lemma implies_land : tests -> land_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [_ /andP [H' _]].
+Qed.
+
+Lemma implies_lor : tests -> lor_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [_ /andP [_ /andP [H' _]]].
+Qed.
+
+Lemma implies_lxor : tests -> lxor_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H' _]]]].
+Qed.
+
+Lemma implies_lsr : tests -> lsr_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]].
+Qed.
+
+Lemma implies_lsl : tests -> lsl_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]].
+Qed.
+
+Lemma implies_neg : tests -> neg_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  have H': unop_tests x by apply implies_unop.
+  by move: H'=> /andP [_ /andP [_ /andP [H1 _]]].
+Qed.
+
+Lemma implies_dec : tests -> dec_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  have H': unop_tests x by apply implies_unop.
+  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H1 _]]]].
+Qed.
+
+Lemma implies_add : tests -> add_test.
+  move=> H.
+  apply/forallIntP=> x.
+  apply idP.
+  apply/forallIntP=> y.
+  apply idP.
+  have H': binop_tests x y by apply implies_binop.
+  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]]].
+Qed.
 
 Cd "src/extraction".
 Extraction "axioms32.ml" tests.

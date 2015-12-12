@@ -12,7 +12,7 @@ From Bits
 
      * Fix invalid extractions (addition is wrong on 63bits arch, for instance)
 
-     * Define as a functor over wordsize (and forallInt) and
+     * Define as a functor over wordsize (and forallInt16) and
        instanciate at 8, 16, and 32 bits 
 
      * Implement an efficient [forall] for bitvectors, prove
@@ -28,172 +28,172 @@ From Bits
 
 Definition wordsize := 16.
 
-Axiom Int: Type.
-Extract Inlined Constant Int => "int".
+Axiom Int16: Type.
+Extract Inlined Constant Int16 => "int".
 
 
 (* Our trusted computing base sums up in these two operations and
 their associated  reflection principles in Coq. *)
 
-Axiom forallInt : (Int -> bool) -> bool.
-Extract Inlined Constant forallInt => "Forall.forall_int".
+Axiom forallInt16 : (Int16 -> bool) -> bool.
+Extract Inlined Constant forallInt16 => "Forall.forall_int".
 
-Axiom eq: Int -> Int -> bool.
+Axiom eq: Int16 -> Int16 -> bool.
 Extract Inlined Constant eq => "(=)".
 
 Section Trust.
 
 (* Axiom 1: Equality of integer is embedded within Coq's propositional equality: *)
-Axiom eqIntP : Equality.axiom eq.
+Axiom eqInt16P : Equality.axiom eq.
 
-Definition viewP (P: pred Int) (PP: Int -> Prop) := forall x, reflect (PP x) (P x).
+Definition viewP (P: pred Int16) (PP: Int16 -> Prop) := forall x, reflect (PP x) (P x).
 
 (* Axiom 2: If a property is true for all integers, then it is propositionally true *)
-Axiom forallIntP : forall P PP, viewP P PP -> reflect (forall x, PP x) (forallInt (fun x => P x)).
+Axiom forallInt16P : forall P PP, viewP P PP -> reflect (forall x, PP x) (forallInt16 (fun x => P x)).
 
 End Trust.
 
 (* All the axiomatized properties below are exhautively tested. *)
 
-Axiom zero : Int.
+Axiom zero : Int16.
 Extract Inlined Constant zero => "0".
 
-Axiom one : Int.
+Axiom one : Int16.
 Extract Inlined Constant one => "1".
 
-Axiom succ : Int -> Int.
+Axiom succ : Int16 -> Int16.
 Extract Constant succ => "(fun x -> (x + 1) land 0xffff)".
 
-Axiom lor: Int -> Int -> Int.
+Axiom lor: Int16 -> Int16 -> Int16.
 Extract Inlined Constant lor => "(lor)".
 
-Axiom lsl: Int -> Int -> Int.
+Axiom lsl: Int16 -> Int16 -> Int16.
 Extract Inlined Constant lsl => "(fun x y -> (x lsl y) land 0xffff)".
 
-Axiom land: Int -> Int -> Int.
+Axiom land: Int16 -> Int16 -> Int16.
 Extract Inlined Constant land => "(land)".
 
-Axiom lt: Int -> Int -> bool.
+Axiom lt: Int16 -> Int16 -> bool.
 Extract Inlined Constant lt => "(<)".
 
-Axiom lsr: Int -> Int -> Int.
+Axiom lsr: Int16 -> Int16 -> Int16.
 Extract Inlined Constant lsr => "(lsr)".
 
-Axiom neg: Int -> Int.
+Axiom neg: Int16 -> Int16.
 Extract Inlined Constant neg => "(fun x -> (-x) land 0xffff)".
 
-Axiom lnot: Int -> Int.
+Axiom lnot: Int16 -> Int16.
 Extract Inlined Constant lnot => "(fun x -> (lnot x) land 0xffff)".
 
-Axiom lxor: Int -> Int -> Int.
+Axiom lxor: Int16 -> Int16 -> Int16.
 Extract Inlined Constant lxor => "(lxor)".
 
-Axiom dec: Int -> Int.
+Axiom dec: Int16 -> Int16.
 Extract Constant dec => "(fun x -> (x - 1) land 0xffff)".
 
-Axiom add: Int -> Int -> Int.
+Axiom add: Int16 -> Int16 -> Int16.
 Extract Inlined Constant add => "(fun x y -> (x + y) land 0xffff)".
 
 (* Conversion between machine integers and bit vectors *)
 
-Fixpoint PbitsToInt (p: seq bool): Int :=
+Fixpoint PbitsToInt16 (p: seq bool): Int16 :=
   match p with
-    | true :: p => lor one (lsl (PbitsToInt p) one)
-    | false :: p => lsl (PbitsToInt p) one
+    | true :: p => lor one (lsl (PbitsToInt16 p) one)
+    | false :: p => lsl (PbitsToInt16 p) one
     | [::] => zero
   end.
 
-Definition bitsToInt (bs: BITS wordsize): Int :=
+Definition bitsToInt16 (bs: BITS wordsize): Int16 :=
   match splitmsb bs with
-    | (false, bs') => PbitsToInt bs'
-    | (true, bs') => neg (PbitsToInt (negB bs))
+    | (false, bs') => PbitsToInt16 bs'
+    | (true, bs') => neg (PbitsToInt16 (negB bs))
   end.
 
-Fixpoint bitsFromIntS (k: nat)(n: Int): seq bool :=
+Fixpoint bitsFromInt16S (k: nat)(n: Int16): seq bool :=
   match k with
     | 0 => [::]
     | k.+1 =>
-      let p := bitsFromIntS k (lsr n one) in
+      let p := bitsFromInt16S k (lsr n one) in
       (eq (land n one) one) :: p                           
   end.
 
-Lemma bitsFromIntP {k} (n: Int): size (bitsFromIntS k n) == k.
+Lemma bitsFromInt16P {k} (n: Int16): size (bitsFromInt16S k n) == k.
 Proof.
   elim: k n => // [k IH] n //=.
   rewrite eqSS //.
 Qed.
 
-Canonical bitsFromInt (n: Int): BITS wordsize
-  := Tuple (bitsFromIntP n).
+Canonical bitsFromInt16 (n: Int16): BITS wordsize
+  := Tuple (bitsFromInt16P n).
 
-(** * Cancelation of [bitsToInt] on [bitsFromInt] *)
+(** * Cancelation of [bitsToInt16] on [bitsFromInt16] *)
 
-Definition bitsToIntK_test: bool :=
- [forall bs , bitsFromInt (bitsToInt bs) == bs ].
+Definition bitsToInt16K_test: bool :=
+ [forall bs , bitsFromInt16 (bitsToInt16 bs) == bs ].
 
 (* Validation condition:
-    Experimentally, [bitsToInt] must be cancelled by [bitsFromInt] *)
-Axiom bitsToIntK_valid: bitsToIntK_test.
+    Experimentally, [bitsToInt16] must be cancelled by [bitsFromInt16] *)
+Axiom bitsToInt16K_valid: bitsToInt16K_test.
 
-Lemma bitsToIntK: cancel bitsToInt bitsFromInt.
+Lemma bitsToInt16K: cancel bitsToInt16 bitsFromInt16.
 Proof.
   move=> bs; apply/eqP; move: bs.
-  by apply/forallP: bitsToIntK_valid.
+  by apply/forallP: bitsToInt16K_valid.
 Qed.
 
-(** * Injectivity of [bitsFromInt] *)
+(** * Injectivity of [bitsFromInt16] *)
 
-Definition bitsFromInt_inj_test: bool := 
-  forallInt (fun x =>
-    forallInt (fun y => 
-      (bitsFromInt x == bitsFromInt y) ==> (eq x y))).
+Definition bitsFromInt16_inj_test: bool := 
+  forallInt16 (fun x =>
+    forallInt16 (fun y => 
+      (bitsFromInt16 x == bitsFromInt16 y) ==> (eq x y))).
 
 (* Validation condition:
-   Experimentally, [bitsFromInt] must be injective *)
-Axiom bitsFromInt_inj_valid: bitsFromInt_inj_test.
+   Experimentally, [bitsFromInt16] must be injective *)
+Axiom bitsFromInt16_inj_valid: bitsFromInt16_inj_test.
 
-Lemma bitsFromInt_inj: injective bitsFromInt.
+Lemma bitsFromInt16_inj: injective bitsFromInt16.
 Proof.
   move=> x y /eqP H.
-  apply/eqIntP.
+  apply/eqInt16P.
   move: H; apply/implyP.
-  move: y; apply/(forallIntP (fun y => (bitsFromInt x == bitsFromInt y) ==> eq x y)).
+  move: y; apply/(forallInt16P (fun y => (bitsFromInt16 x == bitsFromInt16 y) ==> eq x y)).
   move=> y; apply idP.
-  move: x; apply/forallIntP; last by apply bitsFromInt_inj_valid.
+  move: x; apply/forallInt16P; last by apply bitsFromInt16_inj_valid.
   move=> x; apply idP.
 Qed.
 
-Lemma bitsFromIntK: cancel bitsFromInt bitsToInt.
+Lemma bitsFromInt16K: cancel bitsFromInt16 bitsToInt16.
 Proof.
-  apply: inj_can_sym; auto using bitsToIntK, bitsFromInt_inj.
+  apply: inj_can_sym; auto using bitsToInt16K, bitsFromInt16_inj.
 Qed.
 
-(** * Bijection [Int] vs. [BITS wordsize] *)
+(** * Bijection [Int16] vs. [BITS wordsize] *)
 
-Lemma bitsFromInt_bij: bijective bitsFromInt.
+Lemma bitsFromInt16_bij: bijective bitsFromInt16.
 Proof.
-  split with (g := bitsToInt);
-  auto using bitsToIntK, bitsFromIntK.
+  split with (g := bitsToInt16);
+  auto using bitsToInt16K, bitsFromInt16K.
 Qed.
 
 
 (** * Representation relation *)
 
-(** We say that an [n : Int] is the representation of a bitvector
+(** We say that an [n : Int16] is the representation of a bitvector
 [bs : BITS ] if they satisfy the axiom [repr_native]. Morally, it
 means that both represent the same number (ie. the same 
 booleans). *)
 
-Definition native_repr (i: Int)(bs: BITS wordsize): bool
-  := eq i (bitsToInt bs).
+Definition native_repr (i: Int16)(bs: BITS wordsize): bool
+  := eq i (bitsToInt16 bs).
 
 (** * Representation lemma: equality *)
 
-Lemma eq_adj: forall i bs, eq i (bitsToInt bs) = (bitsFromInt i == bs) .
+Lemma eq_adj: forall i bs, eq i (bitsToInt16 bs) = (bitsFromInt16 i == bs) .
 Proof.
   move=> i bs.
-  apply/eqIntP/eqP; intro; subst;
-  auto using bitsFromIntK, bitsToIntK.
+  apply/eqInt16P/eqP; intro; subst;
+  auto using bitsFromInt16K, bitsToInt16K.
 Qed.
   
 Lemma eq_repr:
@@ -204,13 +204,13 @@ Proof.
   move=> i i' bs bs'.
   rewrite /native_repr.
   repeat (rewrite eq_adj; move/eqP=> <-).
-  apply/eqIntP/eqP; intro; subst; auto using bitsFromInt_inj.
+  apply/eqInt16P/eqP; intro; subst; auto using bitsFromInt16_inj.
 Qed.
 
 (** * Representation lemma: individuals *)
 
 Definition zero_test: bool 
-  := eq zero (bitsToInt #0).
+  := eq zero (bitsToInt16 #0).
   
 (* Validation condition:
    bit vector [#0] corresponds to machine [0] *)
@@ -220,7 +220,7 @@ Lemma zero_repr: native_repr zero #0.
 Proof. apply zero_valid. Qed.
   
 Definition one_test: bool
-  := eq one (bitsToInt #1).
+  := eq one (bitsToInt16 #1).
 
 (* Validation condition:
    bit vector [#1] corresponds to machine [1] *)
@@ -232,8 +232,8 @@ Proof. apply one_valid. Qed.
 (** * Representation lemma: successor *)
 
 Definition succ_test: bool
-  := forallInt (fun i =>
-     native_repr (succ i) (incB (bitsFromInt i))).
+  := forallInt16 (fun i =>
+     native_repr (succ i) (incB (bitsFromInt16 i))).
 
 (* Validation condition:
     [succ "n"] corresponds to machine [n + 1] *)
@@ -245,16 +245,16 @@ Proof.
   move=> i ?.
   rewrite /native_repr eq_adj.
   move/eqP=> <-.
-  apply/eqIntP.
-  move: i; apply/forallIntP; last by apply succ_valid.
-  move=> x; apply/eqIntP.
+  apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply succ_valid.
+  move=> x; apply/eqInt16P.
 Qed.
 
 (** * Representation lemma: negation *)
 
 Definition lnot_test: bool
-  := forallInt (fun i =>
-       native_repr (lnot i) (invB (bitsFromInt i))).
+  := forallInt16 (fun i =>
+       native_repr (lnot i) (invB (bitsFromInt16 i))).
 
 (* Validation condition:
     [invB "n"] corresponds to machine [lnot n] *)
@@ -266,17 +266,17 @@ Proof.
   move=> i ?.
   rewrite /native_repr eq_adj.
   move/eqP=> <-.
-  apply/eqIntP.
-  move: i; apply/forallIntP; last by apply lnot_valid.
-  move=> i; apply/eqIntP.
+  apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply lnot_valid.
+  move=> i; apply/eqInt16P.
 Qed.
 
 (** * Representation lemma: logical and *)
 
 Definition land_test: bool
-  := forallInt (fun i =>
-       forallInt (fun i' =>
-         native_repr (land i i') (andB (bitsFromInt i) (bitsFromInt i')))).
+  := forallInt16 (fun i =>
+       forallInt16 (fun i' =>
+         native_repr (land i i') (andB (bitsFromInt16 i) (bitsFromInt16 i')))).
 
 (* Validation condition:
     [land "m" "n"] corresponds to machine [m land n] *)
@@ -288,19 +288,19 @@ Lemma land_repr: forall i i' bs bs',
 Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
-  apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (land i i') (bitsToInt (andB (bitsFromInt i) (bitsFromInt i'))))).
-  move=> i'; apply/eqIntP.
-  move: i; apply/forallIntP; last by apply land_valid.
+  apply/eqInt16P.
+  move: i'; apply/(forallInt16P (fun i' => eq (land i i') (bitsToInt16 (andB (bitsFromInt16 i) (bitsFromInt16 i'))))).
+  move=> i'; apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply land_valid.
   move=> i'; apply idP.
 Qed.
 
 (** * Representation lemma: logical or *)
 
 Definition lor_test: bool
-  := forallInt (fun i =>
-       forallInt (fun i' =>
-         native_repr (lor i i') (orB (bitsFromInt i) (bitsFromInt i')))).
+  := forallInt16 (fun i =>
+       forallInt16 (fun i' =>
+         native_repr (lor i i') (orB (bitsFromInt16 i) (bitsFromInt16 i')))).
 
 (* Validation condition:
     [lor "m" "n"] corresponds to machine [m lor n] *)
@@ -312,19 +312,19 @@ Lemma lor_repr: forall i i' bs bs',
 Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
-  apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (lor i i') (bitsToInt (orB (bitsFromInt i) (bitsFromInt i'))))).
-  move=> i'; apply/eqIntP.
-  move: i; apply/forallIntP; last by apply lor_valid.
+  apply/eqInt16P.
+  move: i'; apply/(forallInt16P (fun i' => eq (lor i i') (bitsToInt16 (orB (bitsFromInt16 i) (bitsFromInt16 i'))))).
+  move=> i'; apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply lor_valid.
   move=> i'; apply idP.
 Qed.
 
 (** * Representation lemma: logical xor *)
 
 Definition lxor_test: bool
-  := forallInt (fun i =>
-       forallInt (fun i' =>
-         native_repr (lxor i i') (xorB (bitsFromInt i) (bitsFromInt i')))).
+  := forallInt16 (fun i =>
+       forallInt16 (fun i' =>
+         native_repr (lxor i i') (xorB (bitsFromInt16 i) (bitsFromInt16 i')))).
 
 (* Validation condition:
     [lxor "m" "n"] corresponds to machine [m lxor n] *)
@@ -337,10 +337,10 @@ Lemma lxor_repr: forall i i' bs bs',
 Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
-  apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (lxor i i') (bitsToInt (xorB (bitsFromInt i) (bitsFromInt i'))))).
-  move=> i'; apply/eqIntP.
-  move: i; apply/forallIntP; last by apply lxor_valid.
+  apply/eqInt16P.
+  move: i'; apply/(forallInt16P (fun i' => eq (lxor i i') (bitsToInt16 (xorB (bitsFromInt16 i) (bitsFromInt16 i'))))).
+  move=> i'; apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply lxor_valid.
   move=> i'; apply idP.
 Qed.
 
@@ -349,15 +349,15 @@ Qed.
 (** We extend the refinement relation (by composition) to natural
 numbers, going through a [BITS wordsize] word. *)
 
-Definition natural_repr (i: Int)(n: nat): bool :=
+Definition natural_repr (i: Int16)(n: nat): bool :=
   [exists bs, native_repr i bs && (# n == bs)].
 
 (** * Representation lemma: logical shift right *)
 
 Definition lsr_test: bool
-  := forallInt (fun i =>
-       forallInt (fun i' =>
-         (toNat (bitsFromInt i') <= wordsize) ==> native_repr (lsr i i') (shrBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
+  := forallInt16 (fun i =>
+       forallInt16 (fun i' =>
+         (toNat (bitsFromInt16 i') <= wordsize) ==> native_repr (lsr i i') (shrBn (bitsFromInt16 i) (toNat (bitsFromInt16 i'))))).
 
 (* Validation condition:
     [lsr "m" "n"] corresponds to machine [m lsr n] *)
@@ -373,8 +373,8 @@ Proof.
   move/existsP=> [bs' /andP [H /eqP H']].
   rewrite /native_repr eq_adj in H.
   move/eqP: H=> H.
-  apply/eqIntP.
-  have Hk: k = toNat (bitsFromInt i').
+  apply/eqInt16P.
+  have Hk: k = toNat (bitsFromInt16 i').
     rewrite H.
     have ->: k = toNat (fromNat (n := wordsize) k).
       rewrite toNat_fromNatBounded=> //.
@@ -383,25 +383,25 @@ Proof.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') <= wordsize) ==> (eq (lsr i i') (bitsToInt (shrBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
+  move: i' ltn_k; apply/(forallInt16P (fun i' => (toNat (bitsFromInt16 i') <= wordsize) ==> (eq (lsr i i') (bitsToInt16 (shrBn (bitsFromInt16 i) (toNat ((bitsFromInt16 i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
   split=> H H'.
   move: (H H')=> H''.
-  by apply/eqIntP.
+  by apply/eqInt16P.
   move: (H H')=> H''.
-  by apply/eqIntP.
-  move: i; apply/forallIntP; last by apply lsr_valid.
+  by apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply lsr_valid.
   move=> i'; apply idP.
 Qed.
 
 (** * Representation lemma: logical shift left *)
 
 Definition lsl_test: bool
-  := forallInt (fun i =>
-       forallInt (fun i' =>
-         (toNat (bitsFromInt i') <= wordsize) ==> native_repr (lsl i i') (shlBn (bitsFromInt i) (toNat (bitsFromInt i'))))).
+  := forallInt16 (fun i =>
+       forallInt16 (fun i' =>
+         (toNat (bitsFromInt16 i') <= wordsize) ==> native_repr (lsl i i') (shlBn (bitsFromInt16 i) (toNat (bitsFromInt16 i'))))).
 
 (* Validation condition:
     [lsl "m" "n"] corresponds to machine [m lsl n] *)
@@ -417,8 +417,8 @@ Proof.
   move/existsP=> [bs' /andP [H /eqP H']].
   rewrite /native_repr eq_adj in H.
   move/eqP: H=> H.
-  apply/eqIntP.
-  have Hk: k = toNat (bitsFromInt i').
+  apply/eqInt16P.
+  have Hk: k = toNat (bitsFromInt16 i').
     rewrite H.
     have ->: k = toNat (fromNat (n := wordsize) k).
       rewrite toNat_fromNatBounded=> //.
@@ -427,24 +427,24 @@ Proof.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallIntP (fun i' => (toNat (bitsFromInt i') <= wordsize) ==> (eq (lsl i i') (bitsToInt (shlBn (bitsFromInt i) (toNat ((bitsFromInt i')))))))).
+  move: i' ltn_k; apply/(forallInt16P (fun i' => (toNat (bitsFromInt16 i') <= wordsize) ==> (eq (lsl i i') (bitsToInt16 (shlBn (bitsFromInt16 i) (toNat ((bitsFromInt16 i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
   split=> H H'.
   move: (H H')=> H''.
-  by apply/eqIntP.
+  by apply/eqInt16P.
   move: (H H')=> H''.
-  by apply/eqIntP.
-  move: i; apply/forallIntP; last by apply lsl_valid.
+  by apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply lsl_valid.
   move=> i'; apply idP.
 Qed.
 
 (** * Representation lemma: negation *)
 
 Definition neg_test: bool
-  := forallInt (fun i =>
-       native_repr (neg i) (negB (bitsFromInt i))).
+  := forallInt16 (fun i =>
+       native_repr (neg i) (negB (bitsFromInt16 i))).
 
 (* Validation condition:
     [negB "m"] corresponds to machine [- m] *)
@@ -456,16 +456,16 @@ Proof.
   move=> i ?.
   rewrite /native_repr eq_adj.
   move/eqP=> <-.
-  apply/eqIntP.
-  move: i; apply/forallIntP; last by apply neg_valid.
-  move=> i; apply/eqIntP.
+  apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply neg_valid.
+  move=> i; apply/eqInt16P.
 Qed.
 
 (** * Representation lemma: decrement *)
 
 Definition dec_test: bool
-  := forallInt (fun i =>
-       native_repr (dec i) (decB (bitsFromInt i))).
+  := forallInt16 (fun i =>
+       native_repr (dec i) (decB (bitsFromInt16 i))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
@@ -477,17 +477,17 @@ Proof.
   move=> i ?.
   rewrite /native_repr eq_adj.
   move/eqP=> <-.
-  apply/eqIntP.
-  move: i; apply/forallIntP; last by apply dec_valid.
-  move=> i; apply/eqIntP.
+  apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply dec_valid.
+  move=> i; apply/eqInt16P.
 Qed.
 
 (** * Representation lemma: addition *)
 
 Definition add_test: bool
-  := forallInt (fun i =>
-       forallInt (fun i' =>
-         native_repr (add i i') (addB (bitsFromInt i) (bitsFromInt i')))).
+  := forallInt16 (fun i =>
+       forallInt16 (fun i' =>
+         native_repr (add i i') (addB (bitsFromInt16 i) (bitsFromInt16 i')))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
@@ -500,10 +500,10 @@ Lemma add_repr:
 Proof.
   move=> i i' ? ?.
   repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
-  apply/eqIntP.
-  move: i'; apply/(forallIntP (fun i' => eq (add i i') (bitsToInt (addB (bitsFromInt i) (bitsFromInt i'))))).
-  move=> i'; apply/eqIntP.
-  move: i; apply/forallIntP; last by apply add_valid.
+  apply/eqInt16P.
+  move: i'; apply/(forallInt16P (fun i' => eq (add i i') (bitsToInt16 (addB (bitsFromInt16 i) (bitsFromInt16 i'))))).
+  move=> i'; apply/eqInt16P.
+  move: i; apply/forallInt16P; last by apply add_valid.
   move=> i'; apply idP.
 Qed.
 
@@ -515,35 +515,35 @@ Definition allb s := foldr (andb) true s.
 
 Definition binop_tests x y :=
   allb
-    [:: (bitsFromInt x == bitsFromInt y) ==> (eq x y) ;
-      native_repr (land x y) (andB (bitsFromInt x) (bitsFromInt y)) ;
-      native_repr (lor x y) (orB (bitsFromInt x) (bitsFromInt y)) ;
-      native_repr (lxor x y) (xorB (bitsFromInt x) (bitsFromInt y)) ;
-      (toNat (bitsFromInt y) <= wordsize) ==> native_repr (lsr x y) (shrBn (bitsFromInt x) (toNat (bitsFromInt y))) ;
-      (toNat (bitsFromInt y) <= wordsize) ==> native_repr (lsl x y) (shlBn (bitsFromInt x) (toNat (bitsFromInt y))) ;
-      native_repr (add x y) (addB (bitsFromInt x) (bitsFromInt y))].
+    [:: (bitsFromInt16 x == bitsFromInt16 y) ==> (eq x y) ;
+      native_repr (land x y) (andB (bitsFromInt16 x) (bitsFromInt16 y)) ;
+      native_repr (lor x y) (orB (bitsFromInt16 x) (bitsFromInt16 y)) ;
+      native_repr (lxor x y) (xorB (bitsFromInt16 x) (bitsFromInt16 y)) ;
+      (toNat (bitsFromInt16 y) <= wordsize) ==> native_repr (lsr x y) (shrBn (bitsFromInt16 x) (toNat (bitsFromInt16 y))) ;
+      (toNat (bitsFromInt16 y) <= wordsize) ==> native_repr (lsl x y) (shlBn (bitsFromInt16 x) (toNat (bitsFromInt16 y))) ;
+      native_repr (add x y) (addB (bitsFromInt16 x) (bitsFromInt16 y))].
 
 Definition unop_tests x :=
   allb
-    [:: native_repr (succ x) (incB (bitsFromInt x)) ;
-      native_repr (lnot x) (invB (bitsFromInt x)) ;
-      native_repr (neg x) (negB (bitsFromInt x)) ;
-      native_repr (dec x) (decB (bitsFromInt x)) ;
-      forallInt
+    [:: native_repr (succ x) (incB (bitsFromInt16 x)) ;
+      native_repr (lnot x) (invB (bitsFromInt16 x)) ;
+      native_repr (neg x) (negB (bitsFromInt16 x)) ;
+      native_repr (dec x) (decB (bitsFromInt16 x)) ;
+      forallInt16
         (fun y => binop_tests x y)].
 
 Definition tests
   := allb
-       [:: bitsToIntK_test ;
+       [:: bitsToInt16K_test ;
          zero_test ;
          one_test ;
-         forallInt 
+         forallInt16 
            (fun x => unop_tests x)].
 
 Lemma implies_unop : tests -> forall x, unop_tests x.
   move=> /andP [_ /andP [_ /andP[_ /andP [H _]]]] x.
   rewrite /succ_test.
-  move: H=> /forallIntP H.
+  move: H=> /forallInt16P H.
   move: (H unop_tests)=> H'.
   apply H'=> x'.
   by apply idP.
@@ -553,21 +553,21 @@ Lemma implies_binop : tests -> forall x y, binop_tests x y.
   move => H x y.
   have H': unop_tests x by apply implies_unop.
   move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
-  move: H1=> /forallIntP H1.
+  move: H1=> /forallInt16P H1.
   move: (H1 (binop_tests x))=> H2.
   apply H2=> y'.
   by apply idP.
 Qed.
 
-Lemma implies_bitsToIntK : tests -> bitsToIntK_test.
+Lemma implies_bitsToInt16K : tests -> bitsToInt16K_test.
   by move=> /andP [H _].
 Qed.
 
-Lemma implies_bitsFromInt_inj : tests -> bitsFromInt_inj_test.
+Lemma implies_bitsFromInt16_inj : tests -> bitsFromInt16_inj_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [H' _].
@@ -583,7 +583,7 @@ Qed.
 
 Lemma implies_succ : tests -> succ_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
   by move: H'=> /andP [H1 _].
@@ -591,7 +591,7 @@ Qed.
 
 Lemma implies_lnot : tests -> lnot_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
   by move: H'=> /andP [_ /andP [H1 _]].
@@ -599,9 +599,9 @@ Qed.
 
 Lemma implies_land : tests -> land_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [_ /andP [H' _]].
@@ -609,9 +609,9 @@ Qed.
 
 Lemma implies_lor : tests -> lor_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [H' _]]].
@@ -619,9 +619,9 @@ Qed.
 
 Lemma implies_lxor : tests -> lxor_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H' _]]]].
@@ -629,9 +629,9 @@ Qed.
 
 Lemma implies_lsr : tests -> lsr_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]].
@@ -639,9 +639,9 @@ Qed.
 
 Lemma implies_lsl : tests -> lsl_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]].
@@ -649,7 +649,7 @@ Qed.
 
 Lemma implies_neg : tests -> neg_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
   by move: H'=> /andP [_ /andP [_ /andP [H1 _]]].
@@ -657,7 +657,7 @@ Qed.
 
 Lemma implies_dec : tests -> dec_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H1 _]]]].
@@ -665,9 +665,9 @@ Qed.
 
 Lemma implies_add : tests -> add_test.
   move=> H.
-  apply/forallIntP=> x.
+  apply/forallInt16P=> x.
   apply idP.
-  apply/forallIntP=> y.
+  apply/forallInt16P=> y.
   apply idP.
   have H': binop_tests x y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]]].

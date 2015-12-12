@@ -37,9 +37,8 @@ their properties can be found in [src/spec/operations/properties.v].
 
 ## Axioms verification
 
-Axioms can be verified for 8bit (using only extracted code) and 16bit (using
-hand-crafted tests using extracted code) using the following command (be
-warned: for 16bit, it can take nearly half a day), using the following command:
+Axioms can be verified for 8bit and 16bit (using only extracted code) using the
+following command:
 ```bash
 make verify
 ```

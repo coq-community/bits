@@ -1,10 +1,12 @@
 (*
- * To try with 8, 16, 32bit, only these two lines need to be replaced.
+ * To try with 8, 16, 32bit, only these lines need to be replaced.
  * Note some definitions exported by Coq may need to be hidden.
  *)
 open Axioms16
 let bits_wordsize = wordsize
 let wordsize = 16
+let bitsFromInt = bitsFromInt16
+let bitsToInt = bitsToInt16
 
 type backtrace 
   = Cause of string

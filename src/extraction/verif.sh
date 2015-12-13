@@ -5,6 +5,7 @@ cd $DIR
 rm -f axioms8.mli
 # Some handmade patching needed for unknown reasons
 patch axioms8.ml magic.patch
+patch axioms16.ml magic.patch
 
 echo "Verifying 8bit"
 ocamlbuild axioms8.native && ./axioms8.native

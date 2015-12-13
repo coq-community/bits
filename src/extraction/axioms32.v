@@ -36,7 +36,7 @@ Extract Inlined Constant Int32 => "int".
 their associated  reflection principles in Coq. *)
 
 Axiom forallInt32 : (Int32 -> bool) -> bool.
-Extract Inlined Constant forallInt32 => "Forall.forall_int 32".
+Extract Inlined Constant forallInt32 => "Forall.forall_int32".
 
 Axiom eq: Int32 -> Int32 -> bool.
 Extract Inlined Constant eq => "(=)".

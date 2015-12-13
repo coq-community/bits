@@ -8,3 +8,8 @@ let forall_int wordsize k =
     done;
     true
   with (TestFailure i) -> Printf.printf "failed %d\n" i; false
+
+let forall_int8 = forall_int 8
+let forall_int16 = forall_int 16
+let forall_int32 = forall_int 32
+

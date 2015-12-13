@@ -36,7 +36,7 @@ Extract Inlined Constant Int16 => "int".
 their associated  reflection principles in Coq. *)
 
 Axiom forallInt16 : (Int16 -> bool) -> bool.
-Extract Inlined Constant forallInt16 => "Forall.forall_int 16".
+Extract Inlined Constant forallInt16 => "Forall.forall_int16".
 
 Axiom eq: Int16 -> Int16 -> bool.
 Extract Inlined Constant eq => "(=)".

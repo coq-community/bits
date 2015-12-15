@@ -13,6 +13,31 @@ Unset Strict Implicit.
 Import Prenex Implicits.
 
 (*---------------------------------------------------------------------------
+    Casting properties
+  ---------------------------------------------------------------------------*)
+
+Lemma nat_cast_ord:
+  forall n m (H: n = m) (i: 'I_n), nat_of_ord (cast_ord H i) = i.
+Proof.
+  move=> n m H i.
+  by case: m / H.
+Qed.
+
+Lemma toNat_tcast:
+  forall n m (bs: BITS n)(H: n = m), toNat (tcast H bs) = toNat bs.
+Proof.
+  move=> n m bs H.
+  by case: m / H.
+Qed.
+
+Lemma getBit_tcast:
+  forall n m (bs: BITS n)(H: n = m), getBit (tcast H bs) = getBit bs.
+Proof.
+  move=> n m bs H.
+  by case: m / H.
+Qed.
+
+(*---------------------------------------------------------------------------
     Properties of bitwise logical operations
   ---------------------------------------------------------------------------*)
 
@@ -24,6 +49,38 @@ Lemma liftBinOpCons n op b1 b2 (p1 p2: BITS n) :
   liftBinOp op (consB b1 p1) (consB b2 p2)
   = consB (op b1 b2) (liftBinOp op p1 p2).
 Proof. by apply: eq_from_tnth=> i; rewrite !(tnth_nth (op b1 b2)). Qed.
+
+Lemma getBit_liftBinOp:
+  forall n op (bs: BITS n)(bs': BITS n) k, k < n ->
+    getBit (liftBinOp op bs bs') k = op (getBit bs k) (getBit bs' k).
+Proof.
+  elim=> // n IHn op /tupleP[b bs] /tupleP[b' bs'];
+  case=> [|k] ?.
+  + (* k ~ 0 *)
+    have ->: getBit (liftBinOp op [tuple of b :: bs] [tuple of b' :: bs']) 0 = op b b'
+      by compute.
+    by trivial.
+  + (* k ~ k + 1 *)
+    have ->: getBit [tuple of b :: bs] k.+1 = getBit bs k by compute.
+    have ->: getBit [tuple of b' :: bs'] k.+1 = getBit bs' k by compute.
+    have ->: getBit (liftBinOp op [tuple of b :: bs] [tuple of b' :: bs']) k.+1 = getBit (liftBinOp op bs bs') k
+      by compute.
+    by apply IHn.
+Qed.
+
+Lemma getBit_liftUnOp:
+  forall n op (bs : BITS n) k, k < n -> getBit (liftUnOp op bs) k = op (getBit bs k).
+Proof.
+  elim=> // n IHn op /tupleP[b bs];
+  case=> // k le_k.
+  + (* k ~ k + 1 *)
+    rewrite liftUnOpCons.
+    have ->: getBit [tuple of b :: bs] k.+1 = getBit bs k
+      by compute.
+    have ->: getBit (consB (op b) (liftUnOp op bs)) k.+1 = getBit (liftUnOp op bs) k
+      by compute.
+    by apply IHn; apply le_k.
+Qed.
 
 (** Do something with every hypothesis. *)
 Local Ltac do_with_hyp' tac :=
@@ -132,6 +189,66 @@ Proof. by rewrite /invB; lift_op_t n. Qed.
 Lemma xorBNaux : forall n (b : BITS n), xorB b (invB b) = ones _.
 Proof. move => n b. by rewrite -xorBN xorBA xorBB xor0B. Qed.
 
+Lemma toNat_andB:
+  forall n (bs: BITS n) bs', toNat (andB bs bs') <= toNat bs'.
+Proof.
+  elim=> [bs bs'|n IH /tupleP[b bs] /tupleP[b' bs']].
+  + by rewrite tuple0.
+  + rewrite /andB liftBinOpCons -/andB /=.
+    rewrite /toNat /consB /=.
+    apply leq_add.
+    elim: b=> //.
+    rewrite leq_double.
+    by apply IH.
+Qed.
+
+Lemma orB_invB:
+  forall n (bs: BITS n),
+    orB bs (invB bs) = ones n.
+Proof.
+  move=> n bs.
+  apply allBitsEq=> k le_k.
+  rewrite getBit_liftBinOp =>//.
+  rewrite getBit_liftUnOp =>//.
+  by rewrite orbN /getBit nth_nseq le_k.
+Qed.
+
+Lemma andB_invB:
+  forall n (bs: BITS n),
+    andB bs (invB bs) = zero n.
+Proof.
+  move=> n bs.
+  apply allBitsEq.
+  move=> k le_k.
+  rewrite getBit_liftBinOp =>//.
+  rewrite getBit_liftUnOp =>//.
+  by rewrite andbN -fromNat0 getBit_zero.
+Qed.
+
+Lemma leB_andB:
+  forall n (bs: BITS n) (bs': BITS n), leB (andB bs bs') bs'.
+Proof.
+  elim=> [bs bs'|n IHn /tupleP[b bs] /tupleP[b' bs']].
+  + (* n ~ 0 *)
+    by rewrite !tuple0 [bs']tuple0.
+  + (* n ~ n.+1 *)
+    rewrite /andB liftBinOpCons -/andB /leB /ltB /=
+            !tuple.beheadCons !tuple.theadCons -/ltB.
+    case H: (ltB (andB bs bs') bs').
+      by rewrite /leB in IHn.
+    have H': (andB bs bs' == bs').
+      rewrite -[andB _ _ == _]orbF orbC -H.
+      by apply IHn.
+    rewrite H'.
+    move/eqP: H'->.
+    case: b'=> /=.
+    + (* b' = true *)
+      rewrite !andbT.
+      by case: b=> /=.
+    + (* b' = false *)
+      by rewrite !andbF orbC orbF //.
+Qed.
+
 (*---------------------------------------------------------------------------
     Properties of increment and decrement operations
   ---------------------------------------------------------------------------*)
@@ -145,6 +262,27 @@ Lemma bitsEq_decomp n b1 b2 (p1 p2: BITS n) :
   (consB b1 p1  == consB b2 p2) = (b1 == b2) && (p1 == p2).
 Proof. done. Qed.
 
+Lemma andB_mask1:
+  forall n (bs: BITS n),
+    andB bs #1 = (if getBit bs 0 then #1 else #0).
+Proof.
+  case=> [bs|n /tupleP [b bs]].
+  - (* Case: n ~ 0 *)
+    by rewrite [bs]tuple0 tuple0.
+
+  - (* Case: n ~ n.+1 *)
+    rewrite /andB liftBinOpCons -/andB /= Bool.andb_true_r !fromNat0.
+    have ->: andB bs (zero n) = (zero n)
+      by apply lift_right_zero; apply andbF.
+    have ->: getBit [tuple of b :: bs] 0 = b
+      by [].
+    case: b.
+    + (* Case: b ~ true *)
+      by rewrite /fromNat /= -/fromNat fromNat0.
+
+    + (* Case: b ~ false *)
+      by rewrite zero_decomp.
+Qed.
 
 (* First, with respect to conversions *)
 Lemma toNat_incB n : forall (p: BITS n), toNat (incB p) = if p == ones _ then 0 else (toNat p).+1.
@@ -1411,6 +1549,224 @@ rewrite toNat_fromNatBounded => //.
 rewrite div.modn_small => //. by rewrite expnS mul2n ltn_double. 
 by rewrite expnS mul2n ltn_double. 
 rewrite expnS. apply (ltn_trans LT). apply ltn_Pmull => //. apply expn_gt0. Qed. 
+
+Lemma getBit_shlB:
+  forall n (bs: BITS n) k, k > 0 -> k < n ->
+    getBit (shlB bs) k = getBit bs k.-1.
+Proof.
+  move=> n bs k gtz_k ltn_k.
+  case: k gtz_k ltn_k=> // k ? ltn_k.
+  rewrite /shlB /shlBaux.
+  rewrite getBit_dropmsb=> //.
+Qed.
+
+Lemma shrBn_Sn :
+  forall n b (bs: BITS n) k,
+    shrBn [tuple of b :: bs] k.+1 = shrBn (joinmsb0 bs) k.
+Proof.
+  move=> n b S k.
+  by rewrite {1}/shrBn iterSr //= /droplsb //= tuple.beheadCons.
+Qed.
+
+Lemma shrB_joinmsb0:
+  forall n (bs: BITS n),
+    shrB (joinmsb0 bs) = joinmsb0 (shrB bs).
+Proof.
+  case=> [bs|n /tupleP [b bs]].
+  - (* Case: n ~ 0 *)
+    by rewrite tuple0.
+  - (* Case: n ~ n.+1 *)
+    rewrite /shrB; apply f_equal.
+    have ->: droplsb [tuple of b :: bs] = bs
+      by rewrite /droplsb/splitlsb //= tuple.beheadCons.
+    have ->: joinmsb0 [tuple of b :: bs] = [tuple of b :: joinmsb0 bs]
+      by rewrite /joinmsb0 //= tuple.theadCons tuple.beheadCons.
+    by rewrite /droplsb //= tuple.beheadCons.
+Qed.
+
+Lemma shrBn_joinmsb0:
+  forall n (bs: BITS n) k,
+    shrBn (joinmsb0 bs) k = joinmsb0 (shrBn bs k).
+Proof.
+  move=> n bs.
+  elim=> [|k IHk].
+  - (* Case: k ~ 0 *)
+    by trivial.
+  - (* Case: k ~ k.+1 *)
+    rewrite {1}/shrBn iterS -[iter _ _ _]/(shrBn _ _).
+    by rewrite -shrB_joinmsb0 IHk.
+Qed.
+
+Lemma getBit_shrBn:
+  forall n (bs: BITS n) k k', k + k' < n ->
+    getBit (shrBn bs k) k' = getBit bs (k + k').
+Proof.
+  elim=> // n /= IHn /tupleP[b bs] k k' le_kk'.
+  (* Case: n ~ n.+1 *)
+  case: k le_kk' => [|k] le_kk' //.
+  (* Case: k ~ k.+1 *)
+  have ->: k.+1 + k' = (k + k').+1 by auto with arith.
+  have ->: getBit [tuple of b :: bs] (k + k').+1 = getBit bs (k + k')
+    by compute.
+  rewrite shrBn_Sn shrBn_joinmsb0 /joinmsb0 getBit_joinmsb;
+    last by rewrite (leq_trans (n := k.+1 + k')) // leq_addl //.
+  apply IHn; first by auto with arith.
+Qed.
+
+Lemma getBit_shlB_0:
+  forall n (bs: BITS n), getBit (shlB bs) 0 = false.
+Proof.
+  elim=> [bs|n Hn /tupleP[b bs]].
+  by rewrite tuple0 /getBit.
+  by rewrite /shlB /shlBaux getBit_dropmsb.
+Qed.
+
+Lemma getBit_shlBn_true:
+  forall n k, k < n -> getBit (n := n) (shlBn #1 k) k = true.
+Proof.
+  elim=> [//|n Hn].
+  elim=> [|k Hk] le_k.
+  rewrite /shlBn /=.
+  rewrite /fromNat //.
+  rewrite /shlBn /= getBit_shlB //=.
+  rewrite -[iter _ _ _]/(shlBn _ _).
+  apply Hk.
+  by apply (ltn_trans (n := k.+1)).
+Qed.
+
+Lemma getBit_shlBn_false:
+  forall n k k', k < n -> k' < n -> k <> k' ->
+                 getBit (n := n) (shlBn #1 k) k' = false.
+Proof.
+  elim=> [//|n Hn].
+  elim=> [|k Hk] k' le_k le_k' Hkk'.
+  case: k' le_k' Hkk'=> [//|k' le_k' Hkk'].
+  rewrite /= /getBit /fromNat /= -/fromNat.
+  apply getBit_zero.
+  case: k' le_k' Hkk'=> [|k'] le_k' Hkk'.
+  rewrite /shlBn /=.
+  apply getBit_shlB_0.
+  rewrite /shlBn /= -[iter _ _ _]/(shlBn _ _).
+  rewrite getBit_shlB /= => //.
+  apply Hk.
+  apply (ltn_trans (n := k.+1))=> //.
+  apply (ltn_trans (n := k'.+1))=> //.
+  move/eqP: Hkk'=> Hkk'.
+  apply/eqP.
+  by rewrite -eqSS.
+Qed.
+
+Lemma getBit_shlBn:
+  forall n k, k < n -> shlBn (n := n) #1 k = setBit #0 k true.
+Proof.
+  move=> n k ltn_k.
+  apply allBitsEq=> i ltn_i.
+  case H: (i == k).
+  * move/eqP: H ->.
+    rewrite getBit_shlBn_true=> //.
+    rewrite setBitThenGetSame=> //.
+  * move/eqP: H=> H.
+    rewrite getBit_shlBn_false=> //.
+    rewrite setBitThenGetDistinct=> //.
+    rewrite getBit_zero=> //.
+    move=> Habs.
+    rewrite Habs in H=> //.
+    move=> Habs.
+    by rewrite Habs in H.
+Qed.
+
+Lemma shlBn_overflow:
+  forall n, shlBn (n := n) #1 n = #0.
+Proof.
+  move=> n.
+  apply allBitsEq.
+  elim: n=> [//|n IHn] k le_k.
+  rewrite getBit_zero.
+  case k_gtz: (k > 0).
+  + (* k > 0 *)
+    have predk_lt_k: k.-1 < k.
+      by rewrite -(ltn_add2r 1) !addn1 prednK //.
+    have predk_lt_Sn: k.-1 < n.+1.
+      by rewrite (ltn_trans (n := k))=> //.
+    rewrite /shlBn iterS -[iter _ _ _]/(shlBn _ _) getBit_shlB=> //.
+    rewrite getBit_shlBn_false=> //.
+    apply/eqP.
+    rewrite gtn_eqF //.
+    by rewrite -(ltn_add2r 1) !addn1 prednK.
+  + (* k <= 0 *)
+    have ->: k = 0.
+      by case: k le_k k_gtz=> //.
+    by rewrite /shlBn iterS -[iter _ _ _]/(shlBn _ _) getBit_dropmsb=> //.
+Qed.
+
+Lemma makeOnes:
+  forall n k (q: k + (n - k) = n), k <= n -> decB (shlBn #1 k) = tcast q (zero (n - k) ## ones k).
+Proof.
+  move=> n k q le_k.
+  apply toNat_inj.
+  rewrite toNat_tcast toNat_decB toNatCat toNat_zero mul0n add0n.
+  rewrite toNat_ones.
+  case k_neqz: (shlBn #1 k == #0).
+  + (* shlBn #1 k == #0 -> k >= n *)
+    case ltn_k: (k < n).
+    + (* k < n *)
+      move/eqP: k_neqz=>k_neqz.
+      have: true = false=> //.
+      have->: true = getBit (n := n) (shlBn #1 k) k by rewrite getBit_shlBn_true.
+      have->: false = getBit (n := n) #0 k by rewrite getBit_zero.
+      by rewrite k_neqz //.
+    + (* k >= n *)
+      have ->: k = n=> //.
+        apply/eqP.
+        by rewrite -[k == n]orbF -ltn_k -leq_eqVlt.
+  + (* shlBn #1 k <> #0 -> k < n *)
+    rewrite toNat_shlBn //.
+    case k_eq_n: (k == n).
+    + (* k == n *)
+      move/eqP: k_neqz=>k_neqz.
+      exfalso.
+      apply k_neqz.
+      move/eqP: k_eq_n ->.
+      by apply shlBn_overflow.
+    + (* k <> n *)
+      by rewrite ltn_neqAle k_eq_n le_k.
+Qed.
+
+Lemma getBit_set_true:
+  forall n (bs: BITS n) k x, k < n -> x < n ->
+    getBit (orB bs (shlBn #1 k)) x = (if x == k then true else getBit bs x).
+Proof.
+  move=> n bs k x ? ?.
+  case H: (x == k).
+  - (* Case: x == k *)
+    move/eqP: H=> ->.
+    rewrite getBit_liftBinOp=> //.
+    rewrite getBit_shlBn_true=> //.
+    by apply orbT.
+  - (* Case: x <> k *)
+    rewrite getBit_liftBinOp=> //.
+    rewrite getBit_shlBn_false=> //; last by move/eqP: H; apply: not_eq_sym.
+    by apply orbF.
+Qed.
+
+Lemma getBit_set_false:
+  forall n (bs: BITS n) k x, k < n -> x < n ->
+    getBit (andB bs (invB (shlBn #1 k))) x = (if x == k then false else getBit bs x).
+Proof.
+  move=> n bs k x ? ?.
+  case H: (x == k).
+  - (* Case: x == k *)
+    move/eqP: H=> ->.
+    rewrite getBit_liftBinOp=> //.
+    rewrite getBit_liftUnOp=> //.
+    rewrite getBit_shlBn_true=> //.
+    by apply andbF.
+  - (* Case: x <> k *)
+    rewrite getBit_liftBinOp=> //.
+    rewrite getBit_liftUnOp=> //.
+    rewrite getBit_shlBn_false=> //; last by move/eqP: H; apply not_eq_sym.
+    by apply andbT.
+Qed.
 
 (*---------------------------------------------------------------------------
     Multiplication

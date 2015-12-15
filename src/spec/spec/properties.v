@@ -212,12 +212,71 @@ assert (neq' : i <> i') by  intuition.
 specialize (IHn p _ _ b lt lt' neq'). apply IHn.
 Qed.
 
+Lemma getBit_joinmsb :
+  forall n (bs: BITS n) k,
+    k <= n ->
+    getBit (joinmsb (false , bs)) k = getBit bs k.
+Proof.
+  elim=> [|n IHn] bs k leq_k_n.
+  - (* Case: n ~ 0 *)
+    rewrite leqn0 in leq_k_n.
+    move/eqP: leq_k_n=> ->.
+    by rewrite !tuple0.
+  - (* Case: n ~ n.+1 *)
+    case/tupleP: bs=> [b bs].
+    case: k leq_k_n => [|k leq_k_n].
+    + (* Case: k ~ 0 *)
+      by trivial.
+    + (* Case: k ~ k.+1 *)
+      rewrite /joinmsb/splitlsb tuple.beheadCons
+              tuple.theadCons -/joinmsb /joinlsb //=.
+      by apply: IHn; assumption.
+Qed.
+
+Lemma getBit_dropmsb:
+  forall n (bs : BITS n.+1) k, k < n ->
+    getBit (dropmsb bs) k = getBit bs k.
+Proof.
+  elim=> // n /= IHn /tupleP[b bs] k le_k.
+  rewrite /dropmsb /splitmsb /=
+          tuple.theadCons tuple.beheadCons /=
+          -/splitmsb.
+  set cr := splitmsb bs; rewrite (surjective_pairing cr).
+  have ->: ((cr.1, joinlsb (cr.2, b))).2 = joinlsb (dropmsb bs, b)
+    by rewrite /dropmsb.
+  case: k le_k => // k le_k.
+  + (* k ~ k + 1 *)
+    have H: forall bs', getBit (joinlsb (bs', b)) k.+1 = getBit bs' k by compute.
+    by rewrite !H; auto with arith.
+Qed.
+
 (*---------------------------------------------------------------------------
     Properties of all zeroes and all ones
   ---------------------------------------------------------------------------*)
 Lemma fromNat0 n : #0 = zero n.
 Proof. induction n; first apply trivialBits.
 + rewrite /zero /copy. rewrite /zero /copy in IHn. by rewrite /fromNat-/fromNat IHn nseqCons.
+Qed.
+
+Lemma count_ones:
+  forall n, (count_mem true (ones n)) = n.
+Proof.
+  elim=> //=.
+  auto with arith.
+Qed.
+
+Lemma getBit_zero:
+  forall n k, getBit (n := n) #0 k = false.
+Proof.
+  move=> n k.
+  rewrite fromNat0 /zero /copy /getBit nth_nseq if_same //.
+Qed.
+
+Lemma getBit_ones:
+  forall n k, k < n -> getBit (ones n) k = true.
+Proof.
+  move=> n k le_k.
+  by rewrite /getBit nth_nseq le_k.
 Qed.
 
 Lemma toNat_zero n : toNat (zero n) = 0.

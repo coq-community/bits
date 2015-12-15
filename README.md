@@ -10,6 +10,12 @@ https://x86proved.codeplex.com/SourceControl/network/forks/andrewjkennedy/x86pro
 
 Check https://github.com/artart78/coq-bitset/ for installation instructions.
 
+If you're using OPAM, after you added the repositories as described above, you can install
+coq-bits using:
+```shell
+opam install coq-bits
+```
+
 ## Using the library
 
 To import the main library, do:

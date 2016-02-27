@@ -14,12 +14,8 @@
 
 From Coq
     Require Import ZArith.ZArith Strings.String.
-From Ssreflect
-    Require Import ssreflect ssrfun ssrbool eqtype
-                    ssrnat seq fintype.
-From MathComp
-    Require Import tuple zmodp.
-
+Require Import mathcomp.ssreflect.ssreflect.
+From mathcomp Require Import ssrfun ssrbool eqtype ssrnat seq fintype tuple zmodp.
 
 (* We represent n-bit words by a tuple of booleans, least-significant
 bit at the head DWORDorBYTE is especially useful for multi-mode

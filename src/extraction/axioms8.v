@@ -513,24 +513,26 @@ Require Import ExtrOcamlBasic.
 
 Definition allb s := foldr (andb) true s.
 
-Definition binop_tests x y :=
+Definition binop_tests x bitsX y :=
+  let bitsY := bitsFromInt8 y in
   allb
-    [:: (bitsFromInt8 x == bitsFromInt8 y) ==> (eq x y) ;
-      native_repr (land x y) (andB (bitsFromInt8 x) (bitsFromInt8 y)) ;
-      native_repr (lor x y) (orB (bitsFromInt8 x) (bitsFromInt8 y)) ;
-      native_repr (lxor x y) (xorB (bitsFromInt8 x) (bitsFromInt8 y)) ;
-      (toNat (bitsFromInt8 y) <= wordsize) ==> native_repr (lsr x y) (shrBn (bitsFromInt8 x) (toNat (bitsFromInt8 y))) ;
-      (toNat (bitsFromInt8 y) <= wordsize) ==> native_repr (lsl x y) (shlBn (bitsFromInt8 x) (toNat (bitsFromInt8 y))) ;
-      native_repr (add x y) (addB (bitsFromInt8 x) (bitsFromInt8 y))].
+    [:: (bitsX == bitsY) ==> (eq x y) ;
+      native_repr (land x y) (andB bitsX bitsY) ;
+      native_repr (lor x y) (orB bitsX bitsY) ;
+      native_repr (lxor x y) (xorB bitsX bitsY) ;
+      (toNat bitsY <= wordsize) ==> native_repr (lsr x y) (shrBn bitsX (toNat bitsY)) ;
+      (toNat bitsY <= wordsize) ==> native_repr (lsl x y) (shlBn bitsX (toNat bitsY)) ;
+      native_repr (add x y) (addB bitsX bitsY)].
 
 Definition unop_tests x :=
+  let bitsX := bitsFromInt8 x in
   allb
-    [:: native_repr (succ x) (incB (bitsFromInt8 x)) ;
-      native_repr (lnot x) (invB (bitsFromInt8 x)) ;
-      native_repr (neg x) (negB (bitsFromInt8 x)) ;
-      native_repr (dec x) (decB (bitsFromInt8 x)) ;
+    [:: native_repr (succ x) (incB bitsX) ;
+      native_repr (lnot x) (invB bitsX) ;
+      native_repr (neg x) (negB bitsX) ;
+      native_repr (dec x) (decB bitsX) ;
       forallInt8
-        (fun y => binop_tests x y)].
+        (fun y => binop_tests x bitsX y)].
 
 Definition tests
   := allb
@@ -549,12 +551,12 @@ Lemma implies_unop : tests -> forall x, unop_tests x.
   by apply idP.
 Qed.
 
-Lemma implies_binop : tests -> forall x y, binop_tests x y.
+Lemma implies_binop : tests -> forall x y, binop_tests x (bitsFromInt8 x) y.
   move => H x y.
   have H': unop_tests x by apply implies_unop.
   move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
   move: H1=> /forallInt8P H1.
-  move: (H1 (binop_tests x))=> H2.
+  move: (H1 (binop_tests x (bitsFromInt8 x)))=> H2.
   apply H2=> y'.
   by apply idP.
 Qed.
@@ -569,7 +571,7 @@ Lemma implies_bitsFromInt8_inj : tests -> bitsFromInt8_inj_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [H' _].
 Qed.
 
@@ -603,7 +605,7 @@ Lemma implies_land : tests -> land_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [H' _]].
 Qed.
 
@@ -613,7 +615,7 @@ Lemma implies_lor : tests -> lor_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [H' _]]].
 Qed.
 
@@ -623,7 +625,7 @@ Lemma implies_lxor : tests -> lxor_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H' _]]]].
 Qed.
 
@@ -633,7 +635,7 @@ Lemma implies_lsr : tests -> lsr_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]].
 Qed.
 
@@ -643,7 +645,7 @@ Lemma implies_lsl : tests -> lsl_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]].
 Qed.
 
@@ -669,7 +671,7 @@ Lemma implies_add : tests -> add_test.
   apply idP.
   apply/forallInt8P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt8 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]]].
 Qed.
 

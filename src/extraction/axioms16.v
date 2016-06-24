@@ -10,7 +10,7 @@ From Bits
 
      * Fix invalid extractions (addition is wrong on 63bits arch, for instance)
 
-     * Define as a functor over wordsize (and forallInt16) and
+     * Define as a functor over wordsize (and forallInt) and
        instanciate at 8, 16, and 32 bits 
 
      * Implement an efficient [forall] for bitvectors, prove
@@ -47,7 +47,9 @@ Axiom eqInt16P : Equality.axiom eq.
 Definition viewP (P: pred Int16) (PP: Int16 -> Prop) := forall x, reflect (PP x) (P x).
 
 (* Axiom 2: If a property is true for all integers, then it is propositionally true *)
-Axiom forallInt16P : forall P PP, viewP P PP -> reflect (forall x, PP x) (forallInt16 (fun x => P x)).
+Axiom forallInt16P : forall P PP,
+  viewP P PP ->
+    reflect (forall x, PP x) (forallInt16 (fun x => P x)).
 
 End Trust.
 
@@ -511,24 +513,26 @@ Require Import ExtrOcamlBasic.
 
 Definition allb s := foldr (andb) true s.
 
-Definition binop_tests x y :=
+Definition binop_tests x bitsX y :=
+  let bitsY := bitsFromInt16 y in
   allb
-    [:: (bitsFromInt16 x == bitsFromInt16 y) ==> (eq x y) ;
-      native_repr (land x y) (andB (bitsFromInt16 x) (bitsFromInt16 y)) ;
-      native_repr (lor x y) (orB (bitsFromInt16 x) (bitsFromInt16 y)) ;
-      native_repr (lxor x y) (xorB (bitsFromInt16 x) (bitsFromInt16 y)) ;
-      (toNat (bitsFromInt16 y) <= wordsize) ==> native_repr (lsr x y) (shrBn (bitsFromInt16 x) (toNat (bitsFromInt16 y))) ;
-      (toNat (bitsFromInt16 y) <= wordsize) ==> native_repr (lsl x y) (shlBn (bitsFromInt16 x) (toNat (bitsFromInt16 y))) ;
-      native_repr (add x y) (addB (bitsFromInt16 x) (bitsFromInt16 y))].
+    [:: (bitsX == bitsY) ==> (eq x y) ;
+      native_repr (land x y) (andB bitsX bitsY) ;
+      native_repr (lor x y) (orB bitsX bitsY) ;
+      native_repr (lxor x y) (xorB bitsX bitsY) ;
+      (toNat bitsY <= wordsize) ==> native_repr (lsr x y) (shrBn bitsX (toNat bitsY)) ;
+      (toNat bitsY <= wordsize) ==> native_repr (lsl x y) (shlBn bitsX (toNat bitsY)) ;
+      native_repr (add x y) (addB bitsX bitsY)].
 
 Definition unop_tests x :=
+  let bitsX := bitsFromInt16 x in
   allb
-    [:: native_repr (succ x) (incB (bitsFromInt16 x)) ;
-      native_repr (lnot x) (invB (bitsFromInt16 x)) ;
-      native_repr (neg x) (negB (bitsFromInt16 x)) ;
-      native_repr (dec x) (decB (bitsFromInt16 x)) ;
+    [:: native_repr (succ x) (incB bitsX) ;
+      native_repr (lnot x) (invB bitsX) ;
+      native_repr (neg x) (negB bitsX) ;
+      native_repr (dec x) (decB bitsX) ;
       forallInt16
-        (fun y => binop_tests x y)].
+        (fun y => binop_tests x bitsX y)].
 
 Definition tests
   := allb
@@ -547,12 +551,12 @@ Lemma implies_unop : tests -> forall x, unop_tests x.
   by apply idP.
 Qed.
 
-Lemma implies_binop : tests -> forall x y, binop_tests x y.
+Lemma implies_binop : tests -> forall x y, binop_tests x (bitsFromInt16 x) y.
   move => H x y.
   have H': unop_tests x by apply implies_unop.
   move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
   move: H1=> /forallInt16P H1.
-  move: (H1 (binop_tests x))=> H2.
+  move: (H1 (binop_tests x (bitsFromInt16 x)))=> H2.
   apply H2=> y'.
   by apply idP.
 Qed.
@@ -567,7 +571,7 @@ Lemma implies_bitsFromInt16_inj : tests -> bitsFromInt16_inj_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [H' _].
 Qed.
 
@@ -601,7 +605,7 @@ Lemma implies_land : tests -> land_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [H' _]].
 Qed.
 
@@ -611,7 +615,7 @@ Lemma implies_lor : tests -> lor_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [H' _]]].
 Qed.
 
@@ -621,7 +625,7 @@ Lemma implies_lxor : tests -> lxor_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H' _]]]].
 Qed.
 
@@ -631,7 +635,7 @@ Lemma implies_lsr : tests -> lsr_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]].
 Qed.
 
@@ -641,7 +645,7 @@ Lemma implies_lsl : tests -> lsl_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]].
 Qed.
 
@@ -667,7 +671,7 @@ Lemma implies_add : tests -> add_test.
   apply idP.
   apply/forallInt16P=> y.
   apply idP.
-  have H': binop_tests x y by apply implies_binop.
+  have H': binop_tests x (bitsFromInt16 x) y by apply implies_binop.
   by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]]].
 Qed.
 

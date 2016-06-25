@@ -111,14 +111,19 @@ Axiom lxor: Int32 -> Int32 -> Int32.
 Extract Inlined Constant lxor => "(lxor)".
 Local Instance xor_Int32 : xor_of Int32 := lxor.
 
+Axiom add: Int32 -> Int32 -> Int32.
+Extract Inlined Constant add => "(fun x y -> (x + y) land 0xffffffff)".
+Local Instance add_Int32 : add_of Int32 := add.
+
+
+Axiom sub: Int32 -> Int32 -> Int32.
+Extract Inlined Constant sub => "(fun x y -> (x - y) land 0xffffffff)".
+Local Instance sub_Int32 : sub_of Int32 := sub.
+
 (*
 Axiom dec: Int32 -> Int32.
 Extract Constant dec => "(fun x -> (x - 1) land 0xffffffff)".
 *)
-
-Axiom add: Int32 -> Int32 -> Int32.
-Extract Inlined Constant add => "(fun x y -> (x + y) land 0xffffffff)".
-Local Instance add_Int32 : add_of Int32 := add.
 
 (* Conversion between machine integers and bit vectors *)
 

@@ -1,9 +1,16 @@
 From Coq
      Require Import ZArith.ZArith.
-Require Import mathcomp.ssreflect.ssreflect.
-From mathcomp Require Import ssrbool eqtype ssrnat seq fintype ssrfun tuple.
+From mathcomp
+     Require Import ssreflect ssrbool eqtype ssrnat seq fintype ssrfun tuple.
+From CoqEAL
+     Require Import hrel param refinements.
 From Bits
-     Require Import bits.
+     Require Import bits ops.
+
+Import Refinements.Op.
+Import Logical.Op.
+
+Local Open Scope rel_scope.
 
 (* TODO:
      * Complete missing lemmas
@@ -39,6 +46,8 @@ Extract Inlined Constant forallInt32 => "Forall.forall_int32".
 Axiom eq: Int32 -> Int32 -> bool.
 Extract Inlined Constant eq => "(=)".
 
+Local Instance eq_Int32 : eq_of Int32 := fun x y => eq x y.
+
 Section Trust.
 
 (* Axiom 1: Equality of integer is embedded within Coq's propositional equality: *)
@@ -57,42 +66,59 @@ End Trust.
 
 Axiom zero : Int32.
 Extract Inlined Constant zero => "0".
+Local Instance zero_Int32 : zero_of Int32 := zero.
 
 Axiom one : Int32.
 Extract Inlined Constant one => "1".
+Local Instance one_Int32 : one_of Int32 := one.
 
+(*
 Axiom succ : Int32 -> Int32.
 Extract Constant succ => "(fun x -> (x + 1) land 0xffffffff)".
+Local Instance succ_Int32 : succ_of Int32 := succ.
+*)
 
 Axiom lor: Int32 -> Int32 -> Int32.
 Extract Inlined Constant lor => "(lor)".
+Local Instance or_Int32 : or_of Int32 := lor.
 
 Axiom lsl: Int32 -> Int32 -> Int32.
 Extract Inlined Constant lsl => "(fun x y -> (x lsl y) land 0xffffffff)".
+Local Instance shl_Int32 : shl_of Int32 := lsl.
 
 Axiom land: Int32 -> Int32 -> Int32.
 Extract Inlined Constant land => "(land)".
+Local Instance and_Int32 : and_of Int32 := land.
 
+(*
 Axiom lt: Int32 -> Int32 -> bool.
 Extract Inlined Constant lt => "(<)".
+*)
 
 Axiom lsr: Int32 -> Int32 -> Int32.
 Extract Inlined Constant lsr => "(lsr)".
+Local Instance shr_Int32 : shr_of Int32 := lsr.
 
 Axiom neg: Int32 -> Int32.
 Extract Inlined Constant neg => "(fun x -> (-x) land 0xffffffff)".
+Local Instance opp_Int32 : opp_of Int32 := neg.
 
 Axiom lnot: Int32 -> Int32.
 Extract Inlined Constant lnot => "(fun x -> (lnot x) land 0xffffffff)".
+Local Instance not_Int32 : not_of Int32 := lnot.
 
 Axiom lxor: Int32 -> Int32 -> Int32.
 Extract Inlined Constant lxor => "(lxor)".
+Local Instance xor_Int32 : xor_of Int32 := lxor.
 
+(*
 Axiom dec: Int32 -> Int32.
 Extract Constant dec => "(fun x -> (x - 1) land 0xffffffff)".
+*)
 
 Axiom add: Int32 -> Int32 -> Int32.
 Extract Inlined Constant add => "(fun x y -> (x + y) land 0xffffffff)".
+Local Instance add_Int32 : add_of Int32 := add.
 
 (* Conversion between machine integers and bit vectors *)
 
@@ -143,10 +169,11 @@ Qed.
 
 (** * Injectivity of [bitsFromInt32] *)
 
+
 Definition bitsFromInt32_inj_test: bool := 
   forallInt32 (fun x =>
     forallInt32 (fun y => 
-      (bitsFromInt32 x == bitsFromInt32 y) ==> (eq x y))).
+      implb (bitsFromInt32 x == bitsFromInt32 y) (eq x y))).
 
 (* Validation condition:
    Experimentally, [bitsFromInt32] must be injective *)
@@ -157,7 +184,7 @@ Proof.
   move=> x y /eqP H.
   apply/eqInt32P.
   move: H; apply/implyP.
-  move: y; apply/(forallInt32P (fun y => (bitsFromInt32 x == bitsFromInt32 y) ==> eq x y)).
+  move: y; apply/(forallInt32P (fun y => implb (bitsFromInt32 x == bitsFromInt32 y) (eq x y))).
   move=> y; apply idP.
   move: x; apply/forallInt32P; last by apply bitsFromInt32_inj_valid.
   move=> x; apply idP.
@@ -184,7 +211,7 @@ Qed.
 means that both represent the same number (ie. the same 
 booleans). *)
 
-Definition native_repr (i: Int32)(bs: BITS wordsize): bool
+Definition Rnative (i: Int32)(bs: BITS wordsize): bool
   := eq i (bitsToInt32 bs).
 
 (** * Representation lemma: equality *)
@@ -195,14 +222,12 @@ Proof.
   apply/eqInt32P/eqP; intro; subst;
   auto using bitsFromInt32K, bitsToInt32K.
 Qed.
-  
-Lemma eq_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    (eq i i') = (bs == bs').
+
+Global Instance eq_Rnative: refines (Rnative ==> Rnative ==> Logic.eq) eq_op eqtype.eq_op.
 Proof.
-  move=> i i' bs bs'.
-  rewrite /native_repr.
+  rewrite refinesE=> i1 bs1 Ribs1 i2 bs2 Ribs2.
+  move: Ribs1 Ribs2.
+  rewrite /eq_op/eq_Int32/Rnative.
   repeat (rewrite eq_adj; move/eqP=> <-).
   apply/eqInt32P/eqP; intro; subst; auto using bitsFromInt32_inj.
 Qed.
@@ -216,8 +241,8 @@ Definition zero_test: bool
    bit vector [#0] corresponds to machine [0] *)
 Axiom zero_valid: zero_test.
 
-Lemma zero_repr: native_repr zero #0.
-Proof. apply zero_valid. Qed.
+Global Instance zero_Rnative: refines Rnative 0%C #0.
+Proof. rewrite refinesE. apply zero_valid. Qed.
   
 Definition one_test: bool
   := eq one (bitsToInt32 #1).
@@ -226,45 +251,48 @@ Definition one_test: bool
    bit vector [#1] corresponds to machine [1] *)
 Axiom one_valid: one_test.
 
-Lemma one_repr: native_repr one #1.
-Proof. apply one_valid. Qed.
+Global Instance one_Rnative: refines Rnative 1%C #1.
+Proof. rewrite refinesE. apply one_valid. Qed.
 
 (** * Representation lemma: successor *)
-
+(*
 Definition succ_test: bool
   := forallInt32 (fun i =>
-     native_repr (succ i) (incB (bitsFromInt32 i))).
+     Rnative (succ i) (incB (bitsFromInt32 i))).
 
 (* Validation condition:
     [succ "n"] corresponds to machine [n + 1] *)
 Axiom succ_valid: succ_test.
 
-Lemma succ_repr: forall i bs,
-    native_repr i bs -> native_repr (succ i) (incB bs).
+Global Instance succ_Rnative: 
+  refines (Rnative ==> Rnative) succ incB.
+forall i bs,
+    Rnative i bs -> Rnative (succ i) (incB bs).
 Proof.
   move=> i ?.
-  rewrite /native_repr eq_adj.
+  rewrite /Rnative eq_adj.
   move/eqP=> <-.
   apply/eqInt32P.
   move: i; apply/forallInt32P; last by apply succ_valid.
   move=> x; apply/eqInt32P.
 Qed.
+*)
 
 (** * Representation lemma: negation *)
 
 Definition lnot_test: bool
   := forallInt32 (fun i =>
-       native_repr (lnot i) (invB (bitsFromInt32 i))).
+       Rnative (lnot i) (invB (bitsFromInt32 i))).
 
 (* Validation condition:
     [invB "n"] corresponds to machine [lnot n] *)
 Axiom lnot_valid: lnot_test.
 
-Lemma lnot_repr: forall i bs,
-    native_repr i bs -> native_repr (lnot i) (invB bs).
+Global Instance lnot_Rnative: 
+  refines (Rnative ==> Rnative) ~%C invB.
 Proof.
-  move=> i ?.
-  rewrite /native_repr eq_adj.
+  rewrite refinesE=> i bs.
+  rewrite /Rnative eq_adj.
   move/eqP=> <-.
   apply/eqInt32P.
   move: i; apply/forallInt32P; last by apply lnot_valid.
@@ -276,23 +304,23 @@ Qed.
 Definition land_test: bool
   := forallInt32 (fun i =>
        forallInt32 (fun i' =>
-         native_repr (land i i') (andB (bitsFromInt32 i) (bitsFromInt32 i')))).
+         Rnative (land i i') (andB (bitsFromInt32 i) (bitsFromInt32 i')))).
 
 (* Validation condition:
     [land "m" "n"] corresponds to machine [m land n] *)
 Axiom land_valid: land_test.
 
-Lemma land_repr: forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (land i i') (andB bs bs').
+Global Instance land_Rnative:
+  refines (Rnative ==> Rnative ==> Rnative) &&%C andB.
 Proof.
-  move=> i i' ? ?.
-  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  rewrite refinesE=> i1 bs1 Ribs1 i2 bs2 Ribs2. move: Ribs1 Ribs2.
+  repeat (rewrite /Rnative eq_adj; move/eqP=> <-).
   apply/eqInt32P.
-  move: i'; apply/(forallInt32P (fun i' => eq (land i i') (bitsToInt32 (andB (bitsFromInt32 i) (bitsFromInt32 i'))))).
+  rewrite /and_op/and_Int32.
+  move: i2; apply: forallInt32P.
   move=> i'; apply/eqInt32P.
-  move: i; apply/forallInt32P; last by apply land_valid.
-  move=> i'; apply idP.
+  move: i1; apply: forallInt32P; last by apply land_valid.
+  move=> i2; apply idP.
 Qed.
 
 (** * Representation lemma: logical or *)
@@ -300,23 +328,23 @@ Qed.
 Definition lor_test: bool
   := forallInt32 (fun i =>
        forallInt32 (fun i' =>
-         native_repr (lor i i') (orB (bitsFromInt32 i) (bitsFromInt32 i')))).
+         Rnative (lor i i') (orB (bitsFromInt32 i) (bitsFromInt32 i')))).
 
 (* Validation condition:
     [lor "m" "n"] corresponds to machine [m lor n] *)
 Axiom lor_valid: lor_test.
 
-Lemma lor_repr: forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (lor i i') (orB bs bs').
+Global Instance lor_Rnative: 
+  refines (Rnative ==> Rnative ==> Rnative) ||%C orB.
 Proof.
-  move=> i i' ? ?.
-  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  rewrite refinesE=> i1 bs1 Ribs1 i2 bs2 Ribs2.
+  move: Ribs1 Ribs2.
+  repeat (rewrite /Rnative eq_adj; move/eqP=> <-).
   apply/eqInt32P.
-  move: i'; apply/(forallInt32P (fun i' => eq (lor i i') (bitsToInt32 (orB (bitsFromInt32 i) (bitsFromInt32 i'))))).
-  move=> i'; apply/eqInt32P.
-  move: i; apply/forallInt32P; last by apply lor_valid.
-  move=> i'; apply idP.
+  move: i2; apply: forallInt32P.
+  move=> i2; apply/eqInt32P.
+  move: i1; apply: forallInt32P; last by apply lor_valid.
+  move=> i1; apply idP.
 Qed.
 
 (** * Representation lemma: logical xor *)
@@ -324,24 +352,24 @@ Qed.
 Definition lxor_test: bool
   := forallInt32 (fun i =>
        forallInt32 (fun i' =>
-         native_repr (lxor i i') (xorB (bitsFromInt32 i) (bitsFromInt32 i')))).
+         Rnative (lxor i i') (xorB (bitsFromInt32 i) (bitsFromInt32 i')))).
 
 (* Validation condition:
     [lxor "m" "n"] corresponds to machine [m lxor n] *)
 Axiom lxor_valid: lxor_test.
 
 
-Lemma lxor_repr: forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (lxor i i') (xorB bs bs').
+Global Instance lxor_Rnative: 
+  refines (Rnative ==> Rnative ==> Rnative) ^^%C xorB.
 Proof.
-  move=> i i' ? ?.
-  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  rewrite refinesE=> i1 bs1 Ribs1 i2 bs2 Ribs2.
+  move: Ribs1 Ribs2.
+  repeat (rewrite /Rnative eq_adj; move/eqP=> <-).
   apply/eqInt32P.
-  move: i'; apply/(forallInt32P (fun i' => eq (lxor i i') (bitsToInt32 (xorB (bitsFromInt32 i) (bitsFromInt32 i'))))).
-  move=> i'; apply/eqInt32P.
-  move: i; apply/forallInt32P; last by apply lxor_valid.
-  move=> i'; apply idP.
+  move: i2; apply: forallInt32P.
+  move=> i2; apply/eqInt32P.
+  move: i1; apply: forallInt32P; last by apply lxor_valid.
+  move=> i2; apply idP.
 Qed.
 
 (** * Representation of naturals *)
@@ -350,28 +378,30 @@ Qed.
 numbers, going through a [BITS wordsize] word. *)
 
 Definition natural_repr (i: Int32)(n: nat): bool :=
-  [exists bs, native_repr i bs && (# n == bs)].
+  [exists bs, Rnative i bs && (# n == bs)].
 
 (** * Representation lemma: logical shift right *)
 
 Definition lsr_test: bool
   := forallInt32 (fun i =>
        forallInt32 (fun i' =>
-         (toNat (bitsFromInt32 i') <= wordsize) ==> native_repr (lsr i i') (shrBn (bitsFromInt32 i) (toNat (bitsFromInt32 i'))))).
+         implb (toNat (bitsFromInt32 i') <= wordsize)%nat (Rnative (lsr i i') (shrBn (bitsFromInt32 i) (toNat (bitsFromInt32 i')))))).
 
 (* Validation condition:
     [lsr "m" "n"] corresponds to machine [m lsr n] *)
 Axiom lsr_valid: lsr_test.
 
-Lemma lsr_repr: forall i j bs k, k <= wordsize ->
-    native_repr i bs -> natural_repr j k ->
-    native_repr (lsr i j) (shrBn bs k).
+Global Instance lsr_Rnative: 
+  refines (Rnative ==> Rnative ==> Rnative) >>%C (fun bs1 bs2 => shrBn bs1 (toNat bs2)).
+Admitted.
+(*
 Proof.
-  move=> i i' ? k ltn_k.
-  rewrite /native_repr eq_adj; move/eqP=> <-.
+  rewrite refinesE=> i1 bs1 Ribs1 i2 bs2 Ribs2.
+  move: Ribs1 Ribs2.
+  rewrite /Rnative eq_adj; move/eqP=> <-.
   rewrite /natural_repr.
   move/existsP=> [bs' /andP [H /eqP H']].
-  rewrite /native_repr eq_adj in H.
+  rewrite /Rnative eq_adj in H.
   move/eqP: H=> H.
   apply/eqInt32P.
   have Hk: k = toNat (bitsFromInt32 i').
@@ -383,7 +413,7 @@ Proof.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallInt32P (fun i' => (toNat (bitsFromInt32 i') <= wordsize) ==> (eq (lsr i i') (bitsToInt32 (shrBn (bitsFromInt32 i) (toNat ((bitsFromInt32 i')))))))).
+  move: i' ltn_k; apply/(forallInt32P (fun i' => implb (toNat (bitsFromInt32 i') <= wordsize)%nat (eq (lsr i i') (bitsToInt32 (shrBn (bitsFromInt32 i) (toNat ((bitsFromInt32 i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
@@ -395,27 +425,30 @@ Proof.
   move: i; apply/forallInt32P; last by apply lsr_valid.
   move=> i'; apply idP.
 Qed.
+*)
 
 (** * Representation lemma: logical shift left *)
 
 Definition lsl_test: bool
   := forallInt32 (fun i =>
        forallInt32 (fun i' =>
-         (toNat (bitsFromInt32 i') <= wordsize) ==> native_repr (lsl i i') (shlBn (bitsFromInt32 i) (toNat (bitsFromInt32 i'))))).
+          implb (toNat (bitsFromInt32 i') <= wordsize)%nat
+                (Rnative (lsl i i') (shlBn (bitsFromInt32 i) (toNat (bitsFromInt32 i')))))).
 
 (* Validation condition:
     [lsl "m" "n"] corresponds to machine [m lsl n] *)
 Axiom lsl_valid: lsl_test.
 
-Lemma lsl_repr: forall i j bs k, k <= wordsize ->
-    native_repr i bs -> natural_repr j k ->
-    native_repr (lsl i j) (shlBn bs k).
+Global Instance lsl_repr: 
+  refines (Rnative ==> Rnative ==> Rnative) <<%C (fun x y => shlBn x (toNat y)).
+Admitted.
+(*
 Proof.
   move=> i i' ? k ltn_k.
-  rewrite /native_repr eq_adj; move/eqP=> <-.
+  rewrite /Rnative eq_adj; move/eqP=> <-.
   rewrite /natural_repr.
   move/existsP=> [bs' /andP [H /eqP H']].
-  rewrite /native_repr eq_adj in H.
+  rewrite /Rnative eq_adj in H.
   move/eqP: H=> H.
   apply/eqInt32P.
   have Hk: k = toNat (bitsFromInt32 i').
@@ -427,7 +460,7 @@ Proof.
   rewrite Hk.
   rewrite Hk in ltn_k.
   clear H H' Hk.
-  move: i' ltn_k; apply/(forallInt32P (fun i' => (toNat (bitsFromInt32 i') <= wordsize) ==> (eq (lsl i i') (bitsToInt32 (shlBn (bitsFromInt32 i) (toNat ((bitsFromInt32 i')))))))).
+  move: i' ltn_k; apply/(forallInt32P (fun i' => implb (toNat (bitsFromInt32 i') <= wordsize)%nat (eq (lsl i i') (bitsToInt32 (shlBn (bitsFromInt32 i) (toNat ((bitsFromInt32 i')))))))).
   move=> i'.
   apply/equivP.
   apply/implyP.
@@ -439,72 +472,73 @@ Proof.
   move: i; apply/forallInt32P; last by apply lsl_valid.
   move=> i'; apply idP.
 Qed.
+*)
 
 (** * Representation lemma: negation *)
 
 Definition neg_test: bool
   := forallInt32 (fun i =>
-       native_repr (neg i) (negB (bitsFromInt32 i))).
+       Rnative (neg i) (negB (bitsFromInt32 i))).
 
 (* Validation condition:
     [negB "m"] corresponds to machine [- m] *)
 Axiom neg_valid: neg_test.
 
-Lemma neg_repr: forall i bs,
-    native_repr i bs -> native_repr (neg i) (negB bs).
+Global Instance neg_repr: 
+  refines (Rnative ==> Rnative) -%C negB.
 Proof.
-  move=> i ?.
-  rewrite /native_repr eq_adj.
+  rewrite refinesE=> i bs.
+  rewrite /Rnative eq_adj.
   move/eqP=> <-.
   apply/eqInt32P.
   move: i; apply/forallInt32P; last by apply neg_valid.
-  move=> i; apply/eqInt32P.
+  move=> i; apply: eqInt32P.
 Qed.
 
 (** * Representation lemma: decrement *)
 
+(*
 Definition dec_test: bool
   := forallInt32 (fun i =>
-       native_repr (dec i) (decB (bitsFromInt32 i))).
+       Rnative (dec i) (decB (bitsFromInt32 i))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
 Axiom dec_valid: dec_test.
 
 Lemma dec_repr: forall i bs,
-    native_repr i bs -> native_repr (dec i) (decB bs).
+    Rnative i bs -> Rnative (dec i) (decB bs).
 Proof.
   move=> i ?.
-  rewrite /native_repr eq_adj.
+  rewrite /Rnative eq_adj.
   move/eqP=> <-.
   apply/eqInt32P.
   move: i; apply/forallInt32P; last by apply dec_valid.
   move=> i; apply/eqInt32P.
 Qed.
+*)
 
 (** * Representation lemma: addition *)
 
 Definition add_test: bool
   := forallInt32 (fun i =>
        forallInt32 (fun i' =>
-         native_repr (add i i') (addB (bitsFromInt32 i) (bitsFromInt32 i')))).
+         Rnative (add i i') (addB (bitsFromInt32 i) (bitsFromInt32 i')))).
 
 (* Validation condition:
     [decB "m"] corresponds to machine [dec m] *)
 Axiom add_valid: add_test.
 
-Lemma add_repr:
-  forall i i' bs bs',
-    native_repr i bs -> native_repr i' bs' ->
-    native_repr (add i i') (addB bs bs').
+Global Instance add_Rnative:
+  refines (Rnative ==> Rnative ==> Rnative) +%C (fun x y => addB x y).
 Proof.
-  move=> i i' ? ?.
-  repeat (rewrite /native_repr eq_adj; move/eqP=> <-).
+  rewrite refinesE=> i1 bs1 Ribs1 i2 bs2 Ribs2. move: Ribs1 Ribs2.
+  repeat (rewrite /Rnative eq_adj; move/eqP=> <-).
   apply/eqInt32P.
-  move: i'; apply/(forallInt32P (fun i' => eq (add i i') (bitsToInt32 (addB (bitsFromInt32 i) (bitsFromInt32 i'))))).
-  move=> i'; apply/eqInt32P.
-  move: i; apply/forallInt32P; last by apply add_valid.
-  move=> i'; apply idP.
+  move: i2; apply: forallInt32P.
+  move=> i2; apply/eqInt32P.
+  move: i1; apply/forallInt32P; last by apply add_valid.
+  move=> i1; apply idP.
 Qed.
 
 (** Extract the tests: they should all return true! *)
@@ -516,21 +550,21 @@ Definition allb s := foldr (andb) true s.
 Definition binop_tests x bitsX y :=
   let bitsY := bitsFromInt32 y in
   allb
-    [:: (bitsX == bitsY) ==> (eq x y) ;
-      native_repr (land x y) (andB bitsX bitsY) ;
-      native_repr (lor x y) (orB bitsX bitsY) ;
-      native_repr (lxor x y) (xorB bitsX bitsY) ;
-      (toNat bitsY <= wordsize) ==> native_repr (lsr x y) (shrBn bitsX (toNat bitsY)) ;
-      (toNat bitsY <= wordsize) ==> native_repr (lsl x y) (shlBn bitsX (toNat bitsY)) ;
-      native_repr (add x y) (addB bitsX bitsY)].
+    [:: implb (bitsX == bitsY) (eq x y) ;
+      Rnative (land x y) (andB bitsX bitsY) ;
+      Rnative (lor x y) (orB bitsX bitsY) ;
+      Rnative (lxor x y) (xorB bitsX bitsY) ;
+      implb (toNat bitsY <= wordsize)%nat (Rnative (lsr x y) (shrBn bitsX (toNat bitsY))) ;
+      implb (toNat bitsY <= wordsize)%nat (Rnative (lsl x y) (shlBn bitsX (toNat bitsY))) ;
+      Rnative (add x y) (addB bitsX bitsY)].
 
 Definition unop_tests x :=
   let bitsX := bitsFromInt32 x in
   allb
-    [:: native_repr (succ x) (incB bitsX) ;
-      native_repr (lnot x) (invB bitsX) ;
-      native_repr (neg x) (negB bitsX) ;
-      native_repr (dec x) (decB bitsX) ;
+    [:: (*Rnative (succ x) (incB bitsX) ;*)
+      Rnative (lnot x) (invB bitsX) ;
+      Rnative (neg x) (negB bitsX) ;
+(*      Rnative (dec x) (decB bitsX) ; *)
       forallInt32
         (fun y => binop_tests x bitsX y)].
 
@@ -544,7 +578,7 @@ Definition tests
 
 Lemma implies_unop : tests -> forall x, unop_tests x.
   move=> /andP [_ /andP [_ /andP[_ /andP [H _]]]] x.
-  rewrite /succ_test.
+  rewrite /unop_tests.
   move: H=> /forallInt32P H.
   move: (H unop_tests)=> H'.
   apply H'=> x'.
@@ -554,7 +588,7 @@ Qed.
 Lemma implies_binop : tests -> forall x y, binop_tests x (bitsFromInt32 x) y.
   move => H x y.
   have H': unop_tests x by apply implies_unop.
-  move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
+  move: H'=> /andP [_ /andP [_ /andP [H1 _]]].
   move: H1=> /forallInt32P H1.
   move: (H1 (binop_tests x (bitsFromInt32 x)))=> H2.
   apply H2=> y'.
@@ -583,6 +617,7 @@ Lemma implies_one : tests -> one_test.
   by move=> /andP [_ /andP [_ /andP[H _]]].
 Qed.
 
+(*
 Lemma implies_succ : tests -> succ_test.
   move=> H.
   apply/forallInt32P=> x.
@@ -590,13 +625,14 @@ Lemma implies_succ : tests -> succ_test.
   have H': unop_tests x by apply implies_unop.
   by move: H'=> /andP [H1 _].
 Qed.
+*)
 
 Lemma implies_lnot : tests -> lnot_test.
   move=> H.
   apply/forallInt32P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
-  by move: H'=> /andP [_ /andP [H1 _]].
+  by move: H'=> /andP [H1 _].
 Qed.
 
 Lemma implies_land : tests -> land_test.
@@ -654,16 +690,18 @@ Lemma implies_neg : tests -> neg_test.
   apply/forallInt32P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
-  by move: H'=> /andP [_ /andP [_ /andP [H1 _]]].
+  by move: H'=> /andP [_ /andP [H1 _]].
 Qed.
 
+(*
 Lemma implies_dec : tests -> dec_test.
   move=> H.
   apply/forallInt32P=> x.
   apply idP.
   have H': unop_tests x by apply implies_unop.
-  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H1 _]]]].
+  by move: H'=> /andP [_ /andP [_ /andP [H1 _]]].
 Qed.
+*)
 
 Lemma implies_add : tests -> add_test.
   move=> H.

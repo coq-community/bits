@@ -2,6 +2,7 @@
 src/ssrextra/nat.v
 src/ssrextra/tuple.v
 src/bits.v
+src/ops.v
 src/spec/operations.v
 src/spec/operations/properties.v
 src/spec/spec/properties.v

@@ -102,6 +102,7 @@ VFILES:=src/ssrextra/nat.v\
   src/spec/operations/properties.v\
   src/spec/spec/properties.v\
   src/spec/spec.v\
+  src/spec/notations.v\
   src/extraction/axioms8.v\
   src/extraction/axioms16.v\
   src/extraction/axioms32.v

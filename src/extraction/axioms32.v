@@ -509,26 +509,33 @@ Require Import ExtrOcamlBasic.
 
 Definition allb s := foldr (andb) true s.
 
-Definition binop_tests x bitsX y :=
-  let bitsY := bitsFromInt32 y in
+Definition binop_tests x bitsX y bitsY :=
   allb
     [:: (bitsX == bitsY) ==> (eq x y) ;
       native_repr (land x y) (andB bitsX bitsY) ;
       native_repr (lor x y) (orB bitsX bitsY) ;
       native_repr (lxor x y) (xorB bitsX bitsY) ;
-      (toNat bitsY <= wordsize) ==> native_repr (lsr x y) (shrBn bitsX (toNat bitsY)) ;
-      (toNat bitsY <= wordsize) ==> native_repr (lsl x y) (shlBn bitsX (toNat bitsY)) ;
       native_repr (add x y) (addB bitsX bitsY)].
+
+Definition shift_tests x toNatX y bitsY :=
+  allb
+    [:: native_repr (lsr y x) (shrBn bitsY toNatX) ;
+        native_repr (lsl y x) (shlBn bitsY toNatX)].
 
 Definition unop_tests x :=
   let bitsX := bitsFromInt32 x in
+  let toNatX := toNat bitsX in
   allb
     [:: native_repr (succ x) (incB bitsX) ;
       native_repr (lnot x) (invB bitsX) ;
       native_repr (neg x) (negB bitsX) ;
       native_repr (dec x) (decB bitsX) ;
-      forallInt32
-        (fun y => binop_tests x bitsX y)].
+      if (toNatX <= wordsize) then
+        forallInt32 (fun y =>
+          let bitsY := bitsFromInt32 y in
+          (binop_tests x bitsX y bitsY) && (shift_tests x toNatX y bitsY))
+      else
+        forallInt32 (fun y => binop_tests x bitsX y (bitsFromInt32 y))].
 
 Definition tests
   := allb
@@ -547,12 +554,19 @@ Lemma implies_unop : tests -> forall x, unop_tests x.
   by apply idP.
 Qed.
 
-Lemma implies_binop : tests -> forall x y, binop_tests x (bitsFromInt32 x) y.
+Lemma implies_binop : tests -> forall x y, binop_tests x (bitsFromInt32 x) y (bitsFromInt32 y).
   move => H x y.
   have H': unop_tests x by apply implies_unop.
   move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
+  case Hc: (toNat (bitsFromInt32 x) <= wordsize); rewrite Hc in H1.
+  have Hb: (binop_tests x (bitsFromInt32 x) y (bitsFromInt32 y)) && (shift_tests x (toNat (bitsFromInt32 x)) y (bitsFromInt32 y)).
+    move: H1=> /forallInt32P H1.
+    move: (H1 (fun y => (binop_tests x (bitsFromInt32 x) y (bitsFromInt32 y)) && (shift_tests x (toNat (bitsFromInt32 x)) y (bitsFromInt32 y))))=> H2.
+    apply H2=> y'.
+    by apply idP.
+  by move: Hb=> /andP [-> _].
   move: H1=> /forallInt32P H1.
-  move: (H1 (binop_tests x (bitsFromInt32 x)))=> H2.
+  move: (H1 (fun y => binop_tests x (bitsFromInt32 x) y (bitsFromInt32 y)))=> H2.
   apply H2=> y'.
   by apply idP.
 Qed.
@@ -567,8 +581,7 @@ Lemma implies_bitsFromInt32_inj : tests -> bitsFromInt32_inj_test.
   apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [H' _].
+  by move: (implies_binop H x y)=> /andP [-> _].
 Qed.
 
 Lemma implies_zero : tests -> zero_test.
@@ -601,8 +614,7 @@ Lemma implies_land : tests -> land_test.
   apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [_ /andP [H' _]].
+  by move: (implies_binop H x y)=> /andP [_ /andP [-> _]].
 Qed.
 
 Lemma implies_lor : tests -> lor_test.
@@ -611,8 +623,7 @@ Lemma implies_lor : tests -> lor_test.
   apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [_ /andP [_ /andP [H' _]]].
+  by move: (implies_binop H x y)=> /andP [_ /andP [_ /andP [-> _]]].
 Qed.
 
 Lemma implies_lxor : tests -> lxor_test.
@@ -621,28 +632,39 @@ Lemma implies_lxor : tests -> lxor_test.
   apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [H' _]]]].
+  by move: (implies_binop H x y)=> /andP [_ /andP [_ /andP [_ /andP [-> _]]]].
+Qed.
+
+Lemma implies_shift : tests -> forall x y, toNat (bitsFromInt32 x) <= wordsize -> shift_tests x (toNat (bitsFromInt32 x)) y (bitsFromInt32 y).
+  move => H x y Hlt.
+  move: (implies_unop H x)=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H1 _]]]]].
+  rewrite Hlt in H1.
+  have Hb: (binop_tests x (bitsFromInt32 x) y (bitsFromInt32 y)) && (shift_tests x (toNat (bitsFromInt32 x)) y (bitsFromInt32 y)).
+    move: H1=> /forallInt32P H1.
+    move: (H1 (fun y => (binop_tests x (bitsFromInt32 x) y (bitsFromInt32 y)) && (shift_tests x (toNat (bitsFromInt32 x)) y (bitsFromInt32 y))))=> H2.
+    apply H2=> y'.
+    by apply idP.
+  by move: Hb=> /andP [_ ->].
 Qed.
 
 Lemma implies_lsr : tests -> lsr_test.
   move=> H.
-  apply/forallInt32P=> x.
-  apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]].
+  apply/forallInt32P=> x.
+  apply idP.
+  apply/implyP=> H'.
+  by move: (implies_shift H x y H')=> /andP [-> _].
 Qed.
 
 Lemma implies_lsl : tests -> lsl_test.
   move=> H.
-  apply/forallInt32P=> x.
-  apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]].
+  apply/forallInt32P=> x.
+  apply idP.
+  apply/implyP=> H'.
+  by move: (implies_shift H x y H')=> /andP [_ /andP [-> _]].
 Qed.
 
 Lemma implies_neg : tests -> neg_test.
@@ -667,8 +689,7 @@ Lemma implies_add : tests -> add_test.
   apply idP.
   apply/forallInt32P=> y.
   apply idP.
-  have H': binop_tests x (bitsFromInt32 x) y by apply implies_binop.
-  by move: H'=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [_ /andP [H' _]]]]]]].
+  by move: (implies_binop H x y)=> /andP [_ /andP [_ /andP [_ /andP [_ /andP [-> _]]]]].
 Qed.
 
 Cd "src/extraction".

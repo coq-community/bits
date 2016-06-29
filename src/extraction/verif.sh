@@ -9,6 +9,6 @@ echo "Verifying 8bit"
 ocamlbuild axioms8.native && ./axioms8.native
 echo "... Ok"
 echo "Verifying 16bit"
-ocamlbuild test.native && ./test.native
+ocamlbuild axioms16.native && ./axioms16.native
 echo "... Ok"
 cd -

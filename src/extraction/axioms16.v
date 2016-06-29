@@ -103,11 +103,7 @@ Fixpoint PbitsToInt16 (p: seq bool): Int16 :=
     | [::] => zero
   end.
 
-Definition bitsToInt16 (bs: BITS wordsize): Int16 :=
-  match splitmsb bs with
-    | (false, bs') => PbitsToInt16 bs'
-    | (true, bs') => neg (PbitsToInt16 (negB bs))
-  end.
+Definition bitsToInt16 (bs: BITS wordsize): Int16 := PbitsToInt16 bs.
 
 Fixpoint bitsFromInt16S (k: nat)(n: Int16): seq bool :=
   match k with

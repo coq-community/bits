@@ -103,11 +103,7 @@ Fixpoint PbitsToInt8 (p: seq bool): Int8 :=
     | [::] => zero
   end.
 
-Definition bitsToInt8 (bs: BITS wordsize): Int8 :=
-  match splitmsb bs with
-    | (false, bs') => PbitsToInt8 bs'
-    | (true, bs') => neg (PbitsToInt8 (negB bs))
-  end.
+Definition bitsToInt8 (bs: BITS wordsize): Int8 := PbitsToInt8 bs.
 
 Fixpoint bitsFromInt8S (k: nat)(n: Int8): seq bool :=
   match k with

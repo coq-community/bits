@@ -103,11 +103,7 @@ Fixpoint PbitsToInt32 (p: seq bool): Int32 :=
     | [::] => zero
   end.
 
-Definition bitsToInt32 (bs: BITS wordsize): Int32 :=
-  match splitmsb bs with
-    | (false, bs') => PbitsToInt32 bs'
-    | (true, bs') => neg (PbitsToInt32 (negB bs))
-  end.
+Definition bitsToInt32 (bs: BITS wordsize): Int32 := PbitsToInt32 bs.
 
 Fixpoint bitsFromInt32S (k: nat)(n: Int32): seq bool :=
   match k with

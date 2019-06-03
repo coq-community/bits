@@ -1272,29 +1272,29 @@ Proof. induction n.
   (* b2 = true *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) in PE. by rewrite andbF andFb orbF in PE.
+  by rewrite /= -E1 andbF andFb orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) in PE. by rewrite andbF andFb orbF in PE.
+  by rewrite -E1 andbF andFb orbF in PE.
   (* b1 = false *)
   destruct b2.
   (* b2 = true *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) in PE. by rewrite -E2 andbF orbF in PE.
+  by rewrite /= -E1 -E2 andbF orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) -E2 in PE. rewrite /leB. by rewrite !andbT in PE.
+  by rewrite -E1 -E2 !andbT in PE.
 
   (* c = false *)
   rewrite /= in EQ.
@@ -1304,29 +1304,29 @@ Proof. induction n.
   (* b2 = true *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) -E2 in PE. by rewrite !andbF orbF/= orbF in PE.
+  by rewrite /= -E1 -E2!andbF orbF/= orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) -E2 in PE. rewrite /leB. by rewrite /= andbF andbT orbF /= in PE.
+  by rewrite -E1 -E2 /= andbF andbT orbF /= in PE.
   (* b1 = false *)
   destruct b2.
   (* b2 = true *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) -E2 in PE. by rewrite !andbT /= orbF in PE.
+  by rewrite /= -E1 -E2 !andbT /= orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) -E2 in PE. rewrite /leB. by rewrite !andbT andbF orbF in PE.
+  by rewrite -E1 -E2 !andbT andbF orbF in PE.
 Qed.
 
 Lemma thead_negB n : forall b (p:BITS n), thead (negB (cons_tuple b p)) = b.

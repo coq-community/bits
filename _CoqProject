@@ -1,4 +1,8 @@
 -R src Bits
+
+-arg -w -arg -notation-overridden
+-arg -w -arg -ambiguous-paths
+
 src/ssrextra/nat.v
 src/ssrextra/tuple.v
 src/bits.v

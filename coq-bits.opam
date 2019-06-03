@@ -1,0 +1,36 @@
+opam-version: "2.0"
+maintainer: "Arthur Blot <arthur.blot@ens-lyon.fr>"
+
+homepage: "https://github.com/artart78/coq-bits"
+dev-repo: "git+https://github.com/artart78/coq-bits.git"
+bug-reports: "https://github.com/artart78/coq-bits/issues"
+license: "Apache-2.0"
+
+synopsis: "A bit vector library"
+description: """
+A formalization of bitset operations in Coq and the corresponding axiomatization and extraction to OCaml native integers.
+"""
+
+build: [make "-j%{jobs}%"]
+install: [make "install"]
+depends: [
+  "ocaml"
+  "coq" {(>= "8.7" & < "8.11~") | (= "dev")}
+  "coq-mathcomp-algebra" {(>= "1.6.2" & < "1.10~")}
+]
+
+tags: [
+  "category:Computer Science/Data Types and Data Structures"
+  "keyword:bit arithmetic"
+  "keyword:bitset"
+  "keyword:extraction"
+  "logpath:Bits"
+]
+authors: [
+  "Andrew Kennedy <akenn@microsoft.com>"
+  "Arthur Blot <arthur.blot@ens-lyon.fr>"
+  "Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr>"
+]
+url {
+  src: "git+https://github.com/artart78/coq-bits.git#master"
+}

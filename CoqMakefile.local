@@ -1,0 +1,3 @@
+verify: all
+	src/extraction/verif.sh
+

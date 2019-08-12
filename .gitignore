@@ -6,6 +6,9 @@ opam/
 *.glob
 *.v.d
 *.aux
+CoqMakefile
+CoqMakefile.conf
+.coqdeps.d
 
 # * Emacs
 *~

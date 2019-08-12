@@ -1,3 +1,7 @@
 -R . BitTest
+
+-arg -w -arg -notation-overridden
+-arg -w -arg -ambiguous-paths
+
 benchmark.v
 integers.v

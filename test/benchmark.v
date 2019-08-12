@@ -1,7 +1,8 @@
 (*===========================================================================
   Test the performance of bits operations
   ===========================================================================*)
-From Ssreflect
+From Coq Require Import ZArith.
+From mathcomp
     Require Import ssreflect ssrfun ssrbool eqtype ssrnat seq tuple ssralg.
 From Bits.spec
      Require Import spec operations.

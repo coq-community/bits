@@ -270,17 +270,10 @@ Proof.
     by rewrite [bs]tuple0 tuple0.
 
   - (* Case: n ~ n.+1 *)
-    rewrite /andB liftBinOpCons -/andB /= Bool.andb_true_r !fromNat0.
-    have ->: andB bs (zero n) = (zero n)
-      by apply lift_right_zero; apply andbF.
-    have ->: getBit [tuple of b :: bs] 0 = b
-      by [].
-    case: b.
-    + (* Case: b ~ true *)
-      by rewrite /fromNat /= -/fromNat fromNat0.
-
-    + (* Case: b ~ false *)
-      by rewrite zero_decomp.
+    rewrite /andB liftBinOpCons -/andB /= andbT !fromNat0 -/fromNat.
+    rewrite andB0.
+    have ->: getBit [tuple of b :: bs] 0 = b by [].
+    by case: b=> //; rewrite zero_decomp fromNat0.
 Qed.
 
 (* First, with respect to conversions *)
@@ -757,17 +750,17 @@ induction m => c p.
 Qed.
 
 
+Transparent sbbB adcB.
+
 Corollary addIsIterInc n (p:BITS n) m : p +# m = iter m incB p.
-Proof. rewrite /adcB. apply adcIsIterInc. Qed.
+Proof. by apply: adcIsIterInc. Qed.
 
 (*---------------------------------------------------------------------------
     Properties of subtraction
   ---------------------------------------------------------------------------*)
 
 Lemma subB_is_dropmsb_adcB_invB  n (p q: BITS n) : subB p q = dropmsb (adcBmain true p (invB q)).
-Proof. rewrite /dropmsb/sbbB/adcB. simpl (~~false).
-case (splitmsb (adcBmain true p (invB q))) => //.
-Qed.
+Proof. by []. Qed.
 
 Lemma toZp_subB n (p q: BITS n.+1) : toZp (subB p q) = (toZp p - toZp q)%R.
 Proof. rewrite subB_is_dropmsb_adcB_invB.
@@ -1279,29 +1272,29 @@ Proof. induction n.
   (* b2 = true *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) in PE. by rewrite andbF andFb orbF in PE.
+  by rewrite /= -E1 andbF andFb orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) in PE. by rewrite andbF andFb orbF in PE.
+  by rewrite -E1 andbF andFb orbF in PE.
   (* b1 = false *)
   destruct b2.
   (* b2 = true *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) in PE. by rewrite -E2 andbF orbF in PE.
+  by rewrite /= -E1 -E2 andbF orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) -E2 in PE. rewrite /leB. by rewrite !andbT in PE.
+  by rewrite -E1 -E2 !andbT in PE.
 
   (* c = false *)
   rewrite /= in EQ.
@@ -1311,29 +1304,29 @@ Proof. induction n.
   (* b2 = true *)
   case E: (splitmsb (adcBmain true p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) -E2 in PE. by rewrite !andbF orbF/= orbF in PE.
+  by rewrite /= -E1 -E2!andbF orbF/= orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) -E2 in PE. rewrite /leB. by rewrite /= andbF andbT orbF /= in PE.
+  by rewrite -E1 -E2 /= andbF andbT orbF /= in PE.
   (* b1 = false *)
   destruct b2.
   (* b2 = true *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite /= -(val_inj _ _ E1) -E2 in PE. by rewrite !andbT /= orbF in PE.
+  by rewrite /= -E1 -E2 !andbT /= orbF in PE.
   (* b2 = false *)
   case E: (splitmsb (adcBmain false p1 p2)) => [carry'' p'].
   specialize (IHn _ _ _ _ _ E). rewrite beheadCons E in EQ.
-  injection EQ => E1 E2 E3.
+  injection EQ => /val_inj E1 E2 E3.
   rewrite -E3. apply IHn.
-  rewrite -(val_inj _ _ E1) -E2 in PE. rewrite /leB. by rewrite !andbT andbF orbF in PE.
+  by rewrite -E1 -E2 !andbT andbF orbF in PE.
 Qed.
 
 Lemma thead_negB n : forall b (p:BITS n), thead (negB (cons_tuple b p)) = b.
@@ -1949,6 +1942,8 @@ Proof. induction m. by rewrite expn0 mulB1.
 by rewrite iterS expnS IHm shlB_asMul -mulB_muln mulnC.
 Qed.
 
+Opaque sbbB adcB.
+
 
 
 (*---------------------------------------------------------------------------
@@ -1973,7 +1968,7 @@ End Structures.
 
 (* TODO: Extract Minimal Working Example for 'Failed' below *)
 Parameter n: nat.
-Variable q: 'I_n.+2.
+Parameter q: 'I_n.+2.
 
 Set Printing All.
 Check (n%:R)%R.
@@ -2085,4 +2080,5 @@ Hint Rewrite
 
 Hint Rewrite
   <- addB_addn subB_addn mulB_addn mulB_muln : bitsHints.
+
 

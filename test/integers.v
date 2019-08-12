@@ -28,7 +28,7 @@ Require Import List.
 Definition proj_sumbool (P Q: Prop) (a: {P} + {Q}) : bool :=
   if a then true else false.
 
-Implicit Arguments proj_sumbool [P Q].
+Arguments proj_sumbool [P Q].
 
 Coercion proj_sumbool: sumbool >-> bool.
 
@@ -44,7 +44,7 @@ Definition Zdivide_dec:
   forall (p q: Z), p > 0 -> { (p|q) } + { ~(p|q) }.
 Proof.
   admit.
-Defined.
+Admitted.
 Global Opaque Zdivide_dec.
 
 
@@ -92,7 +92,7 @@ Definition swap_comparison (c: comparison): comparison :=
 (** * Parameterization by the word size, in bits. *)
 
 Module Type WORDSIZE.
-  Variable wordsize: nat.
+  Parameter wordsize: nat.
   Axiom wordsize_not_zero: wordsize <> 0%nat.
 End WORDSIZE.
 
@@ -118,7 +118,7 @@ Qed.
 Remark modulus_power: modulus = two_p zwordsize.
 Proof.
   unfold modulus. admit. (*apply two_power_nat_two_p.*)
-Qed.
+Admitted.
 
 Remark modulus_pos: modulus > 0.
 Proof.
@@ -167,7 +167,7 @@ Definition signed (n: int) : Z :=
 (** Conversely, [repr] takes a Coq integer and returns the corresponding
   machine integer.  The argument is treated modulo [modulus]. *)
 
-Definition admitted {X}: X. admit. Qed.
+Definition admitted {X}: X. admit. Admitted.
 
 Definition repr (x: Z) : int := 
   mkint (Z_mod_modulus x) admitted (*(Z_mod_modulus_range' x).*).

@@ -135,11 +135,12 @@ Proof. case/tupleP: p => [b p]. rewrite /droplsb/splitlsb beheadCons theadCons.
 by rewrite toNatCons/= half_bit_double.
 Qed.
 
-Lemma toNatCat m n (p : BITS m) (q: BITS n) : toNat (p ## q) = toNat p * 2^n + toNat q.
-Proof. induction n. rewrite (tuple0 q). by rewrite expn0 muln1.
-case/tupleP: q => [b q].
-unfold "##".  rewrite catCons. rewrite !toNatCons. unfold "##" in IHn.
-rewrite IHn. rewrite expnS. rewrite -!muln2. ring.
+Lemma toNatCat m n (p : BITS m) (q: BITS n) :
+  toNat (p ## q) = toNat p * 2^n + toNat q.
+Proof.
+elim: n q; first by move=> q; rewrite (tuple0 q) addn0 expn0 muln1.
+move=> n IHn; case/tupleP => [b q].
+rewrite /catB catCons !toNatCons IHn expnS -!muln2; ring.
 Qed.
 
 (*---------------------------------------------------------------------------

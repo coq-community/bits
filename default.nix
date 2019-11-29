@@ -22,5 +22,9 @@ pkgs.stdenv.mkDerivation {
 
   src = if shell then null else ./.;
 
+  installPhase = ''
+    make -f CoqMakefile COQLIB=$out/lib/coq/${coq.coq-version}/ install
+  '';
+
   installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
 }

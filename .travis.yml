@@ -32,6 +32,7 @@ opam: &OPAM
 
 nix: &NIX
   language: nix
+
   script:
   - nix-build --argstr coq-version-or-url "$COQ" --extra-substituters https://coq.cachix.org --trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= coq.cachix.org-1:5QW/wwEnD+l2jvN6QRbRRsa4hBHG3QiQQ26cxu1F5tI="
 
@@ -40,7 +41,7 @@ matrix:
 
   # Test supported versions of Coq via Nix
   - env:
-    - COQ=https://github.com/coq/coq-on-cachix/tarball/master
+    - COQ=8.10
     <<: *NIX
   - env:
     - COQ=8.9

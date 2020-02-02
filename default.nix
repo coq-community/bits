@@ -17,10 +17,14 @@ pkgs.stdenv.mkDerivation {
 
   propagatedBuildInputs = [
     coq
-    mathcomp
+    mathcomp-algebra
   ];
 
   src = if shell then null else ./.;
+
+  installPhase = ''
+    make -f CoqMakefile COQLIB=$out/lib/coq/${coq.coq-version}/ install
+  '';
 
   installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
 }

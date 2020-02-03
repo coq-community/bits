@@ -13,7 +13,7 @@ with coqPackages;
 
 pkgs.stdenv.mkDerivation {
 
-  name = "coq-bits";
+  name = "bits";
 
   propagatedBuildInputs = [
     coq

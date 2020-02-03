@@ -1,4 +1,4 @@
-# Coq Bits
+# Bits
 
 [![Travis][travis-shield]][travis-link]
 [![Contributing][contributing-shield]][contributing-link]
@@ -6,8 +6,8 @@
 [![Gitter][gitter-shield]][gitter-link]
 [![DOI][doi-shield]][doi-link]
 
-[travis-shield]: https://travis-ci.com/coq-community/coq-bits.svg?branch=master
-[travis-link]: https://travis-ci.com/coq-community/coq-bits/builds
+[travis-shield]: https://travis-ci.com/coq-community/bits.svg?branch=master
+[travis-link]: https://travis-ci.com/coq-community/bits/builds
 
 [contributing-shield]: https://img.shields.io/badge/contributions-welcome-%23f7931e.svg
 [contributing-link]: https://github.com/coq-community/manifesto/blob/master/CONTRIBUTING.md
@@ -28,9 +28,9 @@ axiomatization and extraction to OCaml native integers
 ## Meta
 
 - Author(s):
-  - Andrew Kennedy <akenn@microsoft.com> (initial)
-  - Arthur Blot <arthur.blot@ens-lyon.fr> (initial)
-  - Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr> (initial)
+  - Andrew Kennedy (initial)
+  - Arthur Blot (initial)
+  - Pierre-Évariste Dagand (initial)
 - Coq-community maintainer(s):
   - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
 - License: [Apache License 2.0](LICENSE)
@@ -45,7 +45,7 @@ axiomatization and extraction to OCaml native integers
 
 ## Building and installation instructions
 
-The easiest way to install the latest released version of Coq Bits
+The easiest way to install the latest released version of Bits
 is via [OPAM](https://opam.ocaml.org/doc/Install.html):
 
 ```shell
@@ -56,8 +56,8 @@ opam install coq-bits
 To instead build and install manually, do:
 
 ``` shell
-git clone https://github.com/coq-community/coq-bits
-cd coq-bits
+git clone https://github.com/coq-community/bits
+cd bits
 make   # or make -j <number-of-cores-on-your-machine>
 make install
 ```

@@ -63,3 +63,4 @@ matrix:
     - PACKAGE=coq-bits.dev
     - NJOBS=2
     <<: *OPAM
+

@@ -1,6 +1,6 @@
 ---
-fullname: Coq Bits
-shortname: coq-bits
+fullname: Bits
+shortname: bits
 organization: coq-community
 community: true
 travis: true
@@ -36,8 +36,6 @@ authors:
 maintainers:
 - name: Anton Trunov
   nickname: anton-trunov
-
-opam-name: coq-bits
 
 opam-file-maintainer: anton.a.trunov@gmail.com
 

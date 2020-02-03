@@ -2,9 +2,9 @@ opam-version: "2.0"
 maintainer: "anton.a.trunov@gmail.com"
 version: "dev"
 
-homepage: "https://github.com/coq-community/coq-bits"
-dev-repo: "git+https://github.com/coq-community/coq-bits.git"
-bug-reports: "https://github.com/coq-community/coq-bits/issues"
+homepage: "https://github.com/coq-community/bits"
+dev-repo: "git+https://github.com/coq-community/bits.git"
+bug-reports: "https://github.com/coq-community/bits/issues"
 license: "Apache-2.0"
 
 synopsis: "A bit vector library"

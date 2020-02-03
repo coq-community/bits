@@ -1,51 +1,128 @@
-# Coq-bits
+# Coq Bits
+
+[![Travis][travis-shield]][travis-link]
+[![Contributing][contributing-shield]][contributing-link]
+[![Code of Conduct][conduct-shield]][conduct-link]
+[![Gitter][gitter-shield]][gitter-link]
+[![DOI][doi-shield]][doi-link]
+
+[travis-shield]: https://travis-ci.com/coq-community/coq-bits.svg?branch=master
+[travis-link]: https://travis-ci.com/coq-community/coq-bits/builds
+
+[contributing-shield]: https://img.shields.io/badge/contributions-welcome-%23f7931e.svg
+[contributing-link]: https://github.com/coq-community/manifesto/blob/master/CONTRIBUTING.md
+
+[conduct-shield]: https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-%23f15a24.svg
+[conduct-link]: https://github.com/coq-community/manifesto/blob/master/CODE_OF_CONDUCT.md
+
+[gitter-shield]: https://img.shields.io/badge/chat-on%20gitter-%23c1272d.svg
+[gitter-link]: https://gitter.im/coq-community/Lobby
+
+
+[doi-shield]: https://zenodo.org/badge/DOI/10.1007/978-3-319-29604-3_2.svg
+[doi-link]: https://doi.org/10.1007/978-3-319-29604-3_2
+
+A formalization of bitset operations in Coq and the corresponding
+axiomatization and extraction to OCaml native integers
+
+## Meta
+
+- Author(s):
+  - Andrew Kennedy <akenn@microsoft.com> (initial)
+  - Arthur Blot <arthur.blot@ens-lyon.fr> (initial)
+  - Pierre-Évariste Dagand <pierre-evariste.dagand@lip6.fr> (initial)
+- Coq-community maintainer(s):
+  - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
+- License: [Apache License 2.0](LICENSE)
+- Compatible Coq versions: 8.7 or later (use releases for other Coq versions)
+- Compatible OCaml versions: 4.05 or later (not tested on previous versions)
+- Additional dependencies:
+  - [MathComp](https://math-comp.github.io) 1.7.0 or later (`algebra` suffices)
+- Coq namespace: `Bits`
+- Related publication(s):
+  - [From Sets to Bits in Coq](https://hal.archives-ouvertes.fr/hal-01251943/document) doi:[10.1007/978-3-319-29604-3_2](https://doi.org/10.1007/978-3-319-29604-3_2)
+  - [Coq: The world’s best macro assembler?](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/coqasm.pdf) doi:[10.1145/2505879.2505897](https://doi.org/10.1145/2505879.2505897)
+
+## Building and installation instructions
+
+The easiest way to install the latest released version of Coq Bits
+is via [OPAM](https://opam.ocaml.org/doc/Install.html):
+
+```shell
+opam repo add coq-released https://coq.inria.fr/opam/released
+opam install coq-bits
+```
+
+To instead build and install manually, do:
+
+``` shell
+git clone https://github.com/coq-community/coq-bits
+cd coq-bits
+make   # or make -j <number-of-cores-on-your-machine>
+make install
+```
+
 
 ## Origins
 
-This library has been extracted from Andrew Kennedy et al. 'x86proved'.
+This library has been extracted from Andrew Kennedy et al. ['x86proved' fork][xprovedkennedy].
+This link presently redirects to https://github.com/nbenton/x86proved repository.
 
-https://x86proved.codeplex.com/SourceControl/network/forks/andrewjkennedy/x86proved/latest#src/bits.v
-
-## Installation
-
-Check https://github.com/artart78/coq-bitset/ for installation instructions.
-
-If you're using OPAM, after you added the repositories as described above, you can install
-coq-bits using:
-```shell
-opam install coq-bits
-```
+The main paper for this project is [Coq: The world’s best macro assembler?][coqasm].
 
 ## Using the library
 
 To import the main library, do:
-```Coq
-Require Import Bits.bits.
+```coq
+From Bits Require Import bits.
 ```
 
 An axiomatic interface supporting efficient extraction to OCaml can be
 loaded with:
-```Coq
-Require Import Bits.extraction.axioms.
+```coq
+From Bits Require Import extraction.axioms.
 ```
 
 ## Organization
 
+This library, briefly described in the paper [From Sets to Bits in Coq][bitstosets],
+helps to model operations on bitsets. It's a formalization of
+logical and arithmetic operations on bit vectors. A bit vector is defined as an
+SSReflect tuple of bits, i.e. a list of booleans of fixed (word) size.
+
+The key abstractions offered by this library are as follows:
+- `BITS n : Type` - vector of `n` bits
+- `getBit bs k` - test the `k`-th bit of `bs` bit vector
+- `andB xs ys` - bitwise "and"
+- `orB xs ys` - bitwise "or"
+- `xorB xs ys` - bitwise "xor"
+- `invB xs` - bitwise negation
+- `shrB xs k` - right shift by `k` bits
+- `shlB xs k` - left shift by `k` bits
+
+The library characterizes the interactions between these elementary operations
+and provides embeddings to and from the additive group ℤ/(2ⁿ)ℤ.
+
 The overall structure of the code is as follows:
-* ./src/ssrextra: complements to the SSR library
-* ./src/spec: specification of bit vectors
-* ./src/extraction: axiomatic interface to OCaml, for extraction
+- [src/ssrextra](src/ssrextra): complements to the [Mathcomp][mathcomp] library
+- [src/spec](src/spec): specification of bit vectors
+- [src/extraction](src/extraction): axiomatic interface to OCaml, for extraction
 
-For a specific formalization developped in a file [A.v], one will find
-its associated properties in the file [A/properties.v]. For example,
-bit-level operations are defined in [src/spec/operations.v], therefore
-their properties can be found in [src/spec/operations/properties.v].
+For a specific formalization developed in a file `A.v`, one will find its
+associated properties in the file `A/properties.v`. For example, bit-level
+operations are defined in [src/spec/operations.v](src/spec/operations.v),
+therefore their properties can be found in
+[src/spec/operations/properties.v](src/spec/operations/properties.v).
 
-## Axioms verification
+## Verification axioms
 
-Axioms can be verified for 8bit and 16bit (using only extracted code) using the
-following command:
-```bash
+Axioms can be verified for 8-bit and 16-bit (using only extracted code) using
+the following command:
+```shell
 make verify
 ```
 
+[bitstosets]: https://hal.archives-ouvertes.fr/hal-01251943/document
+[coqasm]: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/coqasm.pdf
+[xprovedkennedy]: https://x86proved.codeplex.com/SourceControl/network/forks/andrewjkennedy/x86proved/latest#src/bits.v
+[mathcomp]: https://github.com/math-comp/math-comp

@@ -58,4 +58,8 @@ matrix:
     - PACKAGE=coq-bits.dev
     - NJOBS=2
     <<: *OPAM
-
+  - env:
+    - COQ_IMAGE=coqorg/coq:dev
+    - PACKAGE=coq-bits.dev
+    - NJOBS=2
+    <<: *OPAM

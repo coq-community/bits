@@ -1505,7 +1505,7 @@ Lemma shlB_dropmsb n (p: BITS n.+1) : shlB (dropmsb p) = dropmsb (shlB p).
 Proof.
 apply toNat_inj.
 rewrite toNat_shlB 2!toNat_dropmsb toNat_shlB.
-rewrite -(mul2n (toNat p)). rewrite (expnS 2 n). rewrite -muln_modr; last done.
+rewrite -(mul2n (toNat p)). rewrite (expnS 2 n). rewrite -muln_modr //.
 by rewrite mul2n.
 Qed.
 

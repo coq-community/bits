@@ -3,12 +3,23 @@ opam/
 
 # * Coq
 *.vo
+*.vos
+*.vok
 *.glob
 *.v.d
 *.aux
 CoqMakefile
 CoqMakefile.conf
+.CoqMakefile.d
 .coqdeps.d
+
+# * Coq Extraction
+src/extraction/axioms16.ml
+src/extraction/axioms16.mli
+src/extraction/axioms32.ml
+src/extraction/axioms32.mli
+src/extraction/axioms8.ml
+src/extraction/axioms8.mli
 
 # * Emacs
 *~

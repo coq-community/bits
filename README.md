@@ -80,7 +80,7 @@ From Bits Require Import bits.
 An axiomatic interface supporting efficient extraction to OCaml can be
 loaded with:
 ```coq
-From Bits Require Import extraction.axioms.
+From Bits Require Import extraction.axioms8.  (* or 16 or 32 *)
 ```
 
 ## Organization

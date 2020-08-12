@@ -31,6 +31,7 @@ axiomatization and extraction to OCaml native integers
   - Andrew Kennedy (initial)
   - Arthur Blot (initial)
   - Pierre-Évariste Dagand (initial)
+
 - Coq-community maintainer(s):
   - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
 - License: [Apache License 2.0](LICENSE)
@@ -58,7 +59,7 @@ To instead build and install manually, do:
 ``` shell
 git clone https://github.com/coq-community/bits.git
 cd bits
-make   # or make -j <number-of-cores-on-your-machine>
+make   # or make -j <number-of-cores-on-your-machine> 
 make install
 ```
 

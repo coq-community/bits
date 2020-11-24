@@ -1,4 +1,0 @@
-(coq.theory
- (name Bits)
- (package coq-bits)
- (synopsis "A bit vector library"))

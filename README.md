@@ -1,13 +1,13 @@
 # Bits
 
-[![Travis][travis-shield]][travis-link]
+[![CI][action-shield]][action-link]
 [![Contributing][contributing-shield]][contributing-link]
 [![Code of Conduct][conduct-shield]][conduct-link]
 [![Zulip][zulip-shield]][zulip-link]
 [![DOI][doi-shield]][doi-link]
 
-[travis-shield]: https://travis-ci.com/coq-community/bits.svg?branch=master
-[travis-link]: https://travis-ci.com/coq-community/bits/builds
+[action-shield]: https://github.com/coq-community/bits/workflows/CI/badge.svg?branch=master
+[action-link]: https://github.com/coq-community/bits/actions?query=workflow%3ACI
 
 [contributing-shield]: https://img.shields.io/badge/contributions-welcome-%23f7931e.svg
 [contributing-link]: https://github.com/coq-community/manifesto/blob/master/CONTRIBUTING.md
@@ -22,8 +22,8 @@
 [doi-shield]: https://zenodo.org/badge/DOI/10.1007/978-3-319-29604-3_2.svg
 [doi-link]: https://doi.org/10.1007/978-3-319-29604-3_2
 
-A formalization of bitset operations in Coq and the corresponding
-axiomatization and extraction to OCaml native integers
+A formalization of bitset operations in Coq with a corresponding
+axiomatization and extraction to OCaml native integers.
 
 ## Meta
 
@@ -31,7 +31,6 @@ axiomatization and extraction to OCaml native integers
   - Andrew Kennedy (initial)
   - Arthur Blot (initial)
   - Pierre-Évariste Dagand (initial)
-
 - Coq-community maintainer(s):
   - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
 - License: [Apache License 2.0](LICENSE)
@@ -42,7 +41,7 @@ axiomatization and extraction to OCaml native integers
 - Coq namespace: `Bits`
 - Related publication(s):
   - [From Sets to Bits in Coq](https://hal.archives-ouvertes.fr/hal-01251943/document) doi:[10.1007/978-3-319-29604-3_2](https://doi.org/10.1007/978-3-319-29604-3_2)
-  - [Coq: The world’s best macro assembler?](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/coqasm.pdf) doi:[10.1145/2505879.2505897](https://doi.org/10.1145/2505879.2505897)
+  - [Coq: The world's best macro assembler?](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/coqasm.pdf) doi:[10.1145/2505879.2505897](https://doi.org/10.1145/2505879.2505897)
 
 ## Building and installation instructions
 

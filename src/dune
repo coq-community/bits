@@ -1,0 +1,7 @@
+(coq.theory
+ (name Bits)
+ (package coq-bits)
+ (synopsis "Coq bit vector library")
+ (flags -w -notation-overridden -w -ambiguous-paths))
+
+(include_subdirs qualified)

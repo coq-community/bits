@@ -2,6 +2,8 @@
 
 -arg -w -arg -notation-overridden
 -arg -w -arg -ambiguous-paths
+-arg -w -arg -extraction-opaque-accessed
+-arg -w -arg -extraction-reserved-identifier
 
 src/ssrextra/nat.v
 src/ssrextra/tuple.v

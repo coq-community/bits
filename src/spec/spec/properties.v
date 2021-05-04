@@ -30,7 +30,7 @@ Proof. by rewrite (tuple0 p). Qed.
 Lemma toNatK n : cancel (@toNat n) (@fromNat n).
 Proof. induction n; first (move => p; apply trivialBits).
 + case/tupleP => b x. rewrite toNatCons/fromNat-/fromNat /= half_bit_double.
-rewrite IHn odd_add odd_double. by case b.
+rewrite IHn oddD odd_double. by case b.
 Qed.
 
 (* Hence toNat is injective *)
@@ -77,8 +77,8 @@ Lemma fromNat_wrap n : forall m, fromNat (n:=n) m = fromNat (n:=n) (m + 2^n).
 Proof. induction n => //.
 rewrite expnS.
 move => m.
-case ODD: (odd m); rewrite /fromNat-/fromNat /=ODD odd_add odd_mul/=ODD/= halfD ODD/=.
-specialize (IHn m./2). by rewrite odd_mul/= add0n mul2n doubleK IHn.
+case ODD: (odd m); rewrite /fromNat-/fromNat /=ODD oddD oddM/=ODD/= halfD ODD/=.
+specialize (IHn m./2). by rewrite oddM/= add0n mul2n doubleK IHn.
 specialize (IHn m./2). by rewrite add0n mul2n doubleK IHn.
 Qed.
 

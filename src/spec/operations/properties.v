@@ -1967,18 +1967,19 @@ Canonical Structure BITS_finGroupType :=
 End Structures.
 
 (* TODO: Extract Minimal Working Example for 'Failed' below *)
-Parameter n: nat.
-Parameter q: 'I_n.+2.
-
+(* Parameter n: nat.
+Parameter q: 'I_n.+2. *)
+(*
 Set Printing All.
 Check (n%:R)%R.
+*)
 (*
-@GRing.natmul (GRing.Ring.zmodType ?t0) (GRing.one ?t0) n
-     : GRing.Zmodule.sort (GRing.Ring.zmodType ?t0)
+@GRing.natmul (GRing.Ring.zmodType ?t) (GRing.one ?t) n
+     : GRing.Zmodule.sort (GRing.Ring.zmodType ?t)
 where
-?t0 : [ |- GRing.Ring.type] 
+?t : [ |- GRing.Ring.type]
  *)
-Check (q * n%:R)%R.
+(* Check (q * n%:R)%R. *)
 (*
 @GRing.mul (Zp_ringType n) q
   (@GRing.natmul (GRing.Ring.zmodType (Zp_ringType n))

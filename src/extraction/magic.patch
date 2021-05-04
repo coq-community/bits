@@ -2,7 +2,3 @@
 <   simplPred (fun _ -> true)
 ---
 >   Obj.magic simplPred (fun _ -> true)
-836c836
-<       (Obj.magic mixin_base (assert false (* Proj Args *)) c.mixin) }
----
->       (Obj.magic mixin_base ((* Proj Args *)) c.mixin) }

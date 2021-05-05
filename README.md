@@ -41,6 +41,7 @@ axiomatization and extraction to OCaml native integers.
 - Compatible Coq versions: 8.7 or later (use releases for other Coq versions)
 - Compatible OCaml versions: 4.05 or later (not tested on previous versions)
 - Additional dependencies:
+  - OCamlbuild
   - [MathComp](https://math-comp.github.io) 1.7.0 or later (`algebra` suffices)
 - Coq namespace: `Bits`
 - Related publication(s):

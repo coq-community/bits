@@ -65,6 +65,9 @@ tested_coq_opam_versions:
 
 dependencies:
 - opam:
+    name: ocamlbuild
+  description: OCamlbuild
+- opam:
     name: coq-mathcomp-algebra
     version: '{(>= "1.7" & < "1.12~") | (= "dev")}'
   description: |-

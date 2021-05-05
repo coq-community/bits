@@ -38,7 +38,7 @@ axiomatization and extraction to OCaml native integers.
 - Coq-community maintainer(s):
   - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
 - License: [Apache License 2.0](LICENSE)
-- Compatible Coq versions: 8.7 or later (use releases for other Coq versions)
+- Compatible Coq versions: 8.10 or later (use releases for other Coq versions)
 - Compatible OCaml versions: 4.05 or later (not tested on previous versions)
 - Additional dependencies:
   - OCamlbuild

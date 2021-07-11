@@ -21,7 +21,7 @@ depends: [
   "ocaml" {(>= "4.05" & < "4.13~")}
   "coq" {(>= "8.10" & < "8.14~") | (= "dev")}
   "ocamlbuild" 
-  "coq-mathcomp-algebra" {(>= "1.7" & < "1.13~") | (= "dev")}
+  "coq-mathcomp-algebra" {(>= "1.12" & < "1.13~") | (= "dev")}
 ]
 
 tags: [

@@ -38,9 +38,10 @@ axiomatization and extraction to OCaml native integers.
 - Coq-community maintainer(s):
   - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
 - License: [Apache License 2.0](LICENSE)
-- Compatible Coq versions: 8.7 or later (use releases for other Coq versions)
+- Compatible Coq versions: 8.10 or later (use releases for other Coq versions)
 - Compatible OCaml versions: 4.05 or later (not tested on previous versions)
 - Additional dependencies:
+  - OCamlbuild
   - [MathComp](https://math-comp.github.io) 1.7.0 or later (`algebra` suffices)
 - Coq namespace: `Bits`
 - Related publication(s):
@@ -125,6 +126,10 @@ the following command:
 ```shell
 make verify
 ```
+
+For 8bit, the verification process should finish in few seconds. However
+for 16-bit, depending on your computer speed, it could take more than 6
+hours.
 
 [bitstosets]: https://hal.archives-ouvertes.fr/hal-01251943/document
 [coqasm]: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/12/coqasm.pdf

@@ -37,7 +37,7 @@ Proof.
 induction a => b H.
 + by rewrite !subn0 doubleK.
 + rewrite half_subn1. rewrite uphalf_half. rewrite IHa.
-  rewrite odd_sub. rewrite odd_double/=. rewrite -subn1.
+  rewrite oddB. rewrite odd_double/=. rewrite -subn1.
   rewrite uphalf_half.
 case ODD: (odd a).
   by rewrite add1n subn1.

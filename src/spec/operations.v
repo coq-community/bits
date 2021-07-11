@@ -190,6 +190,8 @@ Definition bRange {n} (p q: BITS n) := bIota p (subB q p).
     Notations
   ---------------------------------------------------------------------------*)
 
+Declare Scope bits_scope.
+
 Module BitsNotations.
 Infix "<<" := shlBn (at level 30, no associativity) : bits_scope.
 Infix ">>" := shrBn (at level 30, no associativity) : bits_scope.

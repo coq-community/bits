@@ -332,7 +332,7 @@ apply expn_gt0.
 Qed.
 
 Lemma fromNatDouble b n : forall m, cons_tuple b (fromNat (n:=n) m) = fromNat (b + m.*2).
-Proof. move => m. rewrite /fromNat-/fromNat/=. rewrite odd_add odd_double.
+Proof. move => m. rewrite /fromNat-/fromNat/=. rewrite oddD odd_double.
 destruct b. simpl. by rewrite uphalf_double.
 by rewrite add0n half_double.
 Qed.
@@ -436,7 +436,7 @@ split.
 +
 rewrite /negB.
 rewrite /fromNat-/fromNat. rewrite invBCons IH2 /=!theadCons!beheadCons.
-rewrite odd_sub. rewrite odd_power2/=.
+rewrite oddB. rewrite odd_power2/=.
 case ODD: (odd m).
 - rewrite expnS mul2n. rewrite half_sub.
   rewrite uphalf_half ODD -subn1 subnDA. done. apply (ltnW H).
@@ -447,7 +447,7 @@ case ODD: (odd m).
   by rewrite subn_gt0.
   apply (ltnW H).
 - rewrite expnS mul2n. apply (ltnW H).
-rewrite /fromNat-/fromNat invBCons IH2. rewrite odd_sub/=.
+rewrite /fromNat-/fromNat invBCons IH2. rewrite oddB/=.
 rewrite odd_power2subn1/=. rewrite -!subn1 -!subnDA expnS mul2n.
 rewrite half_sub. done. apply H.
 rewrite expnS mul2n. apply leq_subn; last done. rewrite -mul2n -expnS. apply expn_gt0.
@@ -586,7 +586,7 @@ induction n.
 + move => b p1 p2. rewrite 2!toNatNil. by destruct b.
 + move => b. case/tupleP => [b1 p1]. case/tupleP => [b2 p2].
   rewrite /fromNat-/fromNat/=.
-  rewrite !theadCons !beheadCons !toNatCons !odd_add !odd_double /=.
+  rewrite !theadCons !beheadCons !toNatCons !oddD !odd_double /=.
   case e: (fullAdder b b1 b2) => [carry' b0].
   specialize (IHn carry' p1 p2). rewrite IHn /= addnA.
   assert (b0 = odd b (+) (odd b1 (+) false) (+) (odd b2 (+) false)).
@@ -1348,7 +1348,7 @@ apply: leq_trans H. apply (ltnW B2).
 rewrite (divn_small H). done.
 
 apply negbT in P. rewrite -leqNgt in P.
-rewrite -(addnBA _ P) divnDl; last done. rewrite divnn POS odd_add/=.
+rewrite -(addnBA _ P) divnDl; last done. rewrite divnn POS oddD/=.
 rewrite negbK.
 assert (toNat p1 - toNat p2 < 2^n).
 assert (H := leq_subr (toNat p2) (toNat p1)).
@@ -1409,7 +1409,7 @@ Qed.
 Lemma toNat_rorB n (p: BITS n.+1) : toNat (rorB p) = (toNat p)./2 + (toNat p %% 2) * 2^n.
 Proof. case/tupleP: p => [b p].
 rewrite /rorB toNat_joinmsb /droplsb/splitlsb beheadCons theadCons toNatCons /=.
-rewrite half_bit_double. rewrite modn2 odd_add odd_double addnC. by destruct b.
+rewrite half_bit_double. rewrite modn2 oddD odd_double addnC. by destruct b.
 Qed.
 
 Lemma toNat_rolB n (p: BITS n.+1) : toNat (rolB p) = (toNat p %% 2^n).*2 + toNat p %/ 2^n.
@@ -1967,18 +1967,19 @@ Canonical Structure BITS_finGroupType :=
 End Structures.
 
 (* TODO: Extract Minimal Working Example for 'Failed' below *)
-Parameter n: nat.
-Parameter q: 'I_n.+2.
-
+(* Parameter n: nat.
+Parameter q: 'I_n.+2. *)
+(*
 Set Printing All.
 Check (n%:R)%R.
+*)
 (*
-@GRing.natmul (GRing.Ring.zmodType ?t0) (GRing.one ?t0) n
-     : GRing.Zmodule.sort (GRing.Ring.zmodType ?t0)
+@GRing.natmul (GRing.Ring.zmodType ?t) (GRing.one ?t) n
+     : GRing.Zmodule.sort (GRing.Ring.zmodType ?t)
 where
-?t0 : [ |- GRing.Ring.type] 
+?t : [ |- GRing.Ring.type]
  *)
-Check (q * n%:R)%R.
+(* Check (q * n%:R)%R. *)
 (*
 @GRing.mul (Zp_ringType n) q
   (@GRing.natmul (GRing.Ring.zmodType (Zp_ringType n))

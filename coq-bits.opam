@@ -15,13 +15,13 @@ description: """
 A formalization of bitset operations in Coq with a corresponding
 axiomatization and extraction to OCaml native integers."""
 
-build: [make "-j%{jobs}%" ]
+build: [make "-j%{jobs}%"]
 install: [make "install"]
 depends: [
   "ocaml" {(>= "4.05" & < "4.13~")}
-  "coq" {(>= "8.10" & < "8.14~") | (= "dev")}
+  "coq" {(>= "8.10" & < "8.15~") | (= "dev")}
   "ocamlbuild" 
-  "coq-mathcomp-algebra" {(>= "1.12" & < "1.13~") | (= "dev")}
+  "coq-mathcomp-algebra" {(>= "1.12" & < "1.14~") | (= "dev")}
 ]
 
 tags: [

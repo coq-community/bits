@@ -46,28 +46,20 @@ license:
   identifier: Apache-2.0
   file: LICENSE
 
-supported_ocaml_versions:
-  text: 4.05 or later (not tested on previous versions)
-  opam: '{(>= "4.05" & < "4.15~")}'
-
 supported_coq_versions:
-  text: 8.10 or later (use releases for other Coq versions)
-  opam: '{(>= "8.10" & < "8.17~")}'
+  text: 8.16 or later (use releases for other Coq versions)
+  opam: '{(>= "8.16" & < "8.19~")}'
 
 tested_coq_opam_versions:
-- version: '1.15.0-coq-8.16'
+- version: '2.1.0-coq-8.18'
   repo: 'mathcomp/mathcomp'
-- version: '1.14.0-coq-8.15'
+- version: '2.0.0-coq-8.18'
   repo: 'mathcomp/mathcomp'
-- version: '1.13.0-coq-8.14'
+- version: '2.1.0-coq-8.17'
   repo: 'mathcomp/mathcomp'
-- version: '1.12.0-coq-8.13'
+- version: '2.1.0-coq-8.16'
   repo: 'mathcomp/mathcomp'
-- version: '1.12.0-coq-8.12'
-  repo: 'mathcomp/mathcomp'
-- version: '1.12.0-coq-8.11'
-  repo: 'mathcomp/mathcomp'
-- version: '1.12.0-coq-8.10'
+- version: '2.0.0-coq-8.16'
   repo: 'mathcomp/mathcomp'
 
 dependencies:
@@ -76,9 +68,9 @@ dependencies:
   description: OCamlbuild
 - opam:
     name: coq-mathcomp-algebra
-    version: '{(>= "1.12" & < "1.16~")}'
+    version: '{(>= "2.0" & < "2.2~")}'
   description: |-
-    [MathComp](https://math-comp.github.io) 1.12.0 or later (`algebra` suffices)
+    [MathComp](https://math-comp.github.io) 2.0 or later (`algebra` suffices)
 
 namespace: Bits
 

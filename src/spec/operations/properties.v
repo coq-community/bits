@@ -1,6 +1,7 @@
  (*===========================================================================
   Proofs of properties of arithmetic and logical operations on n-bit words
   ===========================================================================*)
+From HB Require Import structures.
 Require Import mathcomp.ssreflect.ssreflect.
 
 From mathcomp Require Import ssrfun ssrbool eqtype ssrnat seq fintype tuple zmodp div.
@@ -1196,22 +1197,27 @@ specialize (IHn true p1 p2).
 case E: (splitmsb (adcBmain true p1 p2)) => [carry' p'].
 destruct b2.
 (* b2 = true *)
-rewrite beheadCons theadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons theadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 rewrite IHn; first by rewrite orTb. done.
 (* b2 = false *)
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 rewrite IHn; first by rewrite orTb. done.
 (* b1 = false *)
 destruct b2.
 (* b2 = true *)
 specialize (IHn true p1 p2).
 case E: (splitmsb (adcBmain true p1 p2)) => [carry' p'].
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 rewrite IHn; first by rewrite orTb. done.
 (* b2 = false *)
 specialize (IHn false p1 p2).
 case E: (splitmsb (adcBmain false p1 p2)) => [carry' p'].
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst. simpl.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3.
+subst. simpl.
 rewrite /leB in IHn. rewrite !andbT. by rewrite IHn.
 
 (* c = false *)
@@ -1222,26 +1228,30 @@ destruct b2.
 (* b2 = true *)
 specialize (IHn true p1 p2).
 case E: (splitmsb (adcBmain true p1 p2)) => [carry' p'].
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 specialize (IHn _ E). rewrite /leB. simpl. rewrite !beheadCons. by rewrite IHn.
 (* b2 = false *)
 specialize (IHn false p1 p2).
 case E: (splitmsb (adcBmain false p1 p2)) => [carry' p'].
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 rewrite /leB. simpl. rewrite !beheadCons. specialize (IHn _ E).
 rewrite /leB in IHn. rewrite andbF. rewrite orbF. done.
 (* b1 = false *)
 specialize (IHn false p1 p2). destruct b2.
 (* b2 = true *)
 case E: (splitmsb (adcBmain false p1 p2)) => [carry' p'].
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 rewrite /leB.
 simpl. rewrite !beheadCons !theadCons.
 rewrite /leB in IHn. specialize (IHn _ E). rewrite orbA. rewrite orbF.
 rewrite orbA. rewrite orbF. rewrite IHn. done.
 (* b2 = false *)
 case E: (splitmsb (adcBmain false p1 p2)) => [carry' p'].
-rewrite beheadCons E in H. inversion H. apply val_inj in H3. subst.
+rewrite beheadCons E in H. inversion H.
+rewrite -[LHS]/(\val p') -[RHS]/(\val p) in H3. apply val_inj in H3. subst.
 rewrite /leB. simpl.
 rewrite !beheadCons !theadCons. specialize (IHn _ E).
 rewrite /leB in IHn. rewrite andbT. rewrite andbF. rewrite orbF.
@@ -1962,13 +1972,11 @@ Section Structures.
 
 Variable n:nat.
 
-Definition BITS_zmodMixin := ZmodMixin (@addBA n) (@addBC n) (@add0B n) (@addBN n).
-Canonical Structure BITS_zmodType := Eval hnf in ZmodType (BITS n) BITS_zmodMixin.
-Canonical Structure BITS_finZmodType := Eval hnf in [finZmodType of BITS n].
-Canonical Structure BITS_baseFinGroupType :=
-  Eval hnf in [baseFinGroupType of (BITS n) for +%R].
-Canonical Structure BITS_finGroupType :=
-  Eval hnf in [finGroupType of  (BITS n) for +%R].
+HB.instance Definition _ := Finite.copy (BITS n) [finType of BITS n].
+HB.instance Definition _ := GRing.isZmodule.Build (BITS n)
+  (@addBA n) (@addBC n) (@add0B n) (@addBN n).
+HB.instance Definition _ := isMulGroup.Build (BITS n)
+  (@addBA n) (@add0B n) (@addBN n).
 
 End Structures.
 

@@ -366,6 +366,7 @@ apply pow2_sub_ltn.
 rewrite modn_small => //; last apply pow2_gt1.
 Qed.
 
+#[export]
 Hint Rewrite toZp_incB toZp_decB : ZpHom.
 
 (*---------------------------------------------------------------------------
@@ -553,6 +554,7 @@ case E: (toNat p) => [| n'].
   apply pow2_sub_ltn.
 Qed.
 
+#[export]
 Hint Rewrite toZp_negB : ZpHom.
 
 Lemma negBK n : involutive (@negB n).
@@ -646,6 +648,7 @@ rewrite (@modn_small (toNat p2)); last apply toNatBounded.
 by rewrite modn_mod.
 Qed.
 
+#[export]
 Hint Rewrite toZp_adcB toZp_addB : ZpHom.
 
 Lemma addBC n : commutative (@addB n).
@@ -777,6 +780,7 @@ case E: (toNat q) => [| n'].
   done.
 Qed.
 
+#[export]
 Hint Rewrite toZp_subB : ZpHom.
 
 Lemma subB_equiv_addB_negB n (p q: BITS n): subB p q = addB p (negB q).
@@ -1499,6 +1503,7 @@ rewrite natrD natrM.
 by rewrite /toZpAux -Zp_nat.
 Qed.
 
+#[export]
 Hint Rewrite toZp_shlBaux toZp_shlB : ZpHom.
 
 Lemma shlB_dropmsb n (p: BITS n.+1) : shlB (dropmsb p) = dropmsb (shlB p).
@@ -1800,6 +1805,7 @@ rewrite /mulB/toZp. rewrite toNat_low. rewrite toNat_fullmulB.
 rewrite modZp_pow. rewrite -!Zp_nat. by rewrite !natrM.
 Qed.
 
+#[export]
 Hint Rewrite toZp_mulB : ZpHom.
 
 Lemma toNat_mulB n (p1 p2: BITS n) : toNat (mulB p1 p2) = (toNat p1 * toNat p2) %% 2^n.
@@ -2065,6 +2071,7 @@ Add Ring DWORDbooleanring : (BITSbooleanring n32).
 Add Ring BYTEbooleanring : (BITSbooleanring n8).
 
 (* Small hint database for directed "shrinking" rewrites *)
+#[export]
 Hint Rewrite
   decBK incBK decB_zero incB_ones incB_fromNat decB_fromSuccNat
   xorBB xorB0 xor0B xorBN xorBNaux
@@ -2079,7 +2086,6 @@ Hint Rewrite
   shlB_asMul shlB_mul2exp
   shlB_fromNat shrB_fromNat : bitsHints.
 
+#[export]
 Hint Rewrite
   <- addB_addn subB_addn mulB_addn mulB_muln : bitsHints.
-
-

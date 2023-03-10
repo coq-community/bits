@@ -128,6 +128,7 @@ rewrite /=Zp_cast; last apply pow2_gt1.
 by rewrite modn_mod.
 Qed.
 
+#[export]
 Hint Rewrite toZp_fromNat toZpAux_fromNat : ZpHom.
 
 Lemma toNat_droplsb n (p: BITS n.+1) : toNat (droplsb p) = (toNat p)./2.
@@ -312,6 +313,7 @@ rewrite -subn1. replace (1 %% 2^n.+1) with 1 => //.
 by rewrite modn_small; last apply pow2_gt1.
 Qed.
 
+#[export]
 Hint Rewrite toZpK fromZpK toZp_zero toZpAux_zero toZp_ones : ZpHom.
 
 
@@ -359,6 +361,7 @@ rewrite toNat_dropmsb.
 by rewrite modn_mod.
 Qed.
 
+#[export]
 Hint Rewrite toZp_joinmsb0 toZp_dropmsb : ZpHom.
 
 Lemma splitmsbK n : cancel (@splitmsb n) (@joinmsb n).

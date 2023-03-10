@@ -40,6 +40,7 @@ Proof.
     by rewrite mapCons IHn.
 Qed.
 
+#[export]
 Hint Rewrite @mapCons @mapNil @theadCons @ beheadCons @zipCons @nseqCons @catCons @catNil @mapId : tuple.
 
 Lemma behead_nseq {n A} (a:A) : behead_tuple (nseq_tuple n.+1 a) = nseq_tuple n a.

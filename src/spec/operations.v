@@ -76,7 +76,7 @@ Notation carry_addB p1 p2 := (adcB false p1 p2).1.
 Notation addB p1 p2 := (adcB false p1 p2).2.
 (* Take a page from ssreflect's book of ssrfun *)
 Notation "@ 'addB' n" := (fun p1 p2 : BITS n => addB p1 p2)
-  (at level 10, n at level 8, only parsing) : fun_scope.
+  (at level 10, n at level 8, only parsing) : function_scope.
 
 (*(** Don't simpl unless everything is a constructor. *)
 Global Arguments adcB {!n} !carry !p1 !p2 / .*)
@@ -105,7 +105,7 @@ Definition sbbB {n} borrow (arg1 arg2: BITS n) :=
 Notation carry_subB p1 p2 := (sbbB false p1 p2).1.
 Notation subB p1 p2 := (sbbB false p1 p2).2.
 Notation "@ 'subB' n" := (fun p1 p2 : BITS n => subB p1 p2)
-  (at level 10, n at level 8, only parsing) : fun_scope.
+  (at level 10, n at level 8, only parsing) : function_scope.
 
 (** Don't ever simpl [sbbB]. *)
 (*Global Arguments sbbB {!n} !borrow !arg1 !arg2 / .*)

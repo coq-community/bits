@@ -10,8 +10,8 @@ Follow the instructions on https://github.com/coq-community/templates to regener
 [![Zulip][zulip-shield]][zulip-link]
 [![DOI][doi-shield]][doi-link]
 
-[docker-action-shield]: https://github.com/coq-community/bits/workflows/Docker%20CI/badge.svg?branch=master
-[docker-action-link]: https://github.com/coq-community/bits/actions?query=workflow:"Docker%20CI"
+[docker-action-shield]: https://github.com/coq-community/bits/actions/workflows/docker-action.yml/badge.svg?branch=master
+[docker-action-link]: https://github.com/coq-community/bits/actions/workflows/docker-action.yml
 
 [contributing-shield]: https://img.shields.io/badge/contributions-welcome-%23f7931e.svg
 [contributing-link]: https://github.com/coq-community/manifesto/blob/master/CONTRIBUTING.md
@@ -38,11 +38,10 @@ axiomatization and extraction to OCaml native integers.
 - Coq-community maintainer(s):
   - Anton Trunov ([**@anton-trunov**](https://github.com/anton-trunov))
 - License: [Apache License 2.0](LICENSE)
-- Compatible Coq versions: 8.10 or later (use releases for other Coq versions)
-- Compatible OCaml versions: 4.05 or later (not tested on previous versions)
+- Compatible Coq versions: 8.16 or later (use releases for other Coq versions)
 - Additional dependencies:
   - OCamlbuild
-  - [MathComp](https://math-comp.github.io) 1.12.0 or later (`algebra` suffices)
+  - [MathComp](https://math-comp.github.io) 2.0 or later (`algebra` suffices)
 - Coq namespace: `Bits`
 - Related publication(s):
   - [From Sets to Bits in Coq](https://hal.archives-ouvertes.fr/hal-01251943/document) doi:[10.1007/978-3-319-29604-3_2](https://doi.org/10.1007/978-3-319-29604-3_2)

@@ -1972,7 +1972,7 @@ Section Structures.
 
 Variable n:nat.
 
-HB.instance Definition _ := Finite.copy (BITS n) [finType of BITS n].
+HB.instance Definition _ := Finite.on (BITS n).
 HB.instance Definition _ := GRing.isZmodule.Build (BITS n)
   (@addBA n) (@addBC n) (@add0B n) (@addBN n).
 HB.instance Definition _ := isMulGroup.Build (BITS n)

@@ -48,7 +48,7 @@ license:
 
 supported_coq_versions:
   text: 8.16 or later (use releases for other Coq versions)
-  opam: '{(>= "8.16" & < "8.20~") | (= "dev")}'
+  opam: '{>= "8.16"}'
 
 tested_coq_opam_versions:
 - version: '2.0.0-coq-8.16'
@@ -65,8 +65,6 @@ tested_coq_opam_versions:
   repo: 'mathcomp/mathcomp'
 - version: '2.2.0-coq-dev'
   repo: 'mathcomp/mathcomp'
-- version: 'coq-8.17'
-  repo: 'mathcomp/mathcomp-dev'
 - version: 'coq-8.19'
   repo: 'mathcomp/mathcomp-dev'
 - version: 'coq-dev'
@@ -78,7 +76,7 @@ dependencies:
   description: OCamlbuild
 - opam:
     name: coq-mathcomp-algebra
-    version: '{(>= "2.0" & < "2.3~") | (= "dev")}'
+    version: '{>= "2.0"}'
   description: |-
     [MathComp](https://math-comp.github.io) 2.0 or later (`algebra` suffices)
 

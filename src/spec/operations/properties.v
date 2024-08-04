@@ -1455,8 +1455,8 @@ by rewrite -C splitmsbK.
 Qed.
 
 Lemma toZp_shlBaux n (p: BITS n) : toZp (shlBaux p) = (toZpAux p * 2%:R)%R.
-Proof. destruct n. by rewrite (tuple0 p).
-apply val_inj.
+Proof.
+apply/val_inj; destruct n. by rewrite (tuple0 p).
 rewrite /toZp toNat_shlBaux. rewrite /=Zp_cast; last apply pow2_gt1.
 rewrite modn_small.
 rewrite (@modn_small 1); last apply pow2_gt1.
@@ -1473,7 +1473,7 @@ rewrite expnS mul2n. rewrite ltn_double. apply toNatBounded.
 Qed.
 
 Lemma toZp_shlB n (p: BITS n) : toZp (shlB p) = (toZp p * 2%:R)%R.
-Proof. destruct n. by rewrite (tuple0 p).
+Proof. apply/val_inj; destruct n. by rewrite (tuple0 p).
 
 destruct n.
 case/tupleP: p => [b p].
@@ -1481,7 +1481,7 @@ rewrite (tuple0 p). by destruct b.
 
 rewrite /shlB.  rewrite toZp_dropmsb /toZpAux.
 rewrite toNat_shlBaux. rewrite /toZp.
-apply val_inj. rewrite /=Zp_cast.
+rewrite /=Zp_cast.
 rewrite (@modn_small 1); last apply pow2_gt1.
 rewrite (@modn_small (toNat p)); last apply toNatBounded.
 rewrite addnn.
@@ -1810,7 +1810,8 @@ done. apply expn_gt0.
 Qed.
 
 Lemma toZp_mulB n (p1 p2: BITS n) : toZp (mulB p1 p2) = (toZp p1 * toZp p2)%R.
-Proof. destruct n. by rewrite (tuple0 p1) (tuple0 p2).
+Proof.
+destruct n; first by rewrite (tuple0 p1) (tuple0 p2); apply/val_inj.
 rewrite /mulB/toZp. rewrite toNat_low. rewrite toNat_fullmulB.
 rewrite modZp_pow. rewrite -!Zp_nat. by rewrite !natrM.
 Qed.

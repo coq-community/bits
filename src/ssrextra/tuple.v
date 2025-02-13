@@ -1,4 +1,5 @@
 (* Additional lemmas about tuples *)
+From Coq Require Import Setoid.
 Require Import mathcomp.ssreflect.ssreflect.
 
 From mathcomp Require Import ssrbool ssrnat eqtype seq fintype tuple.

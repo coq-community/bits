@@ -1,12 +1,12 @@
 (*===========================================================================
   Properties of bit vectors
   ===========================================================================*)
-From Coq
-    Require Import ZArith.ZArith.
+From Coq Require Import ZArith.ZArith.
 (*Require Import common.tuplehelp common.nathelp.*)
-Require Import mathcomp.ssreflect.ssreflect.
+From mathcomp Require Import ssreflect.
 
 From mathcomp Require Import ssrfun ssrbool eqtype ssrnat seq fintype tuple div zmodp ssralg.
+From mathcomp Require Import ring.
 Require Import ssrextra.nat ssrextra.tuple.
 Require Import spec.spec.
 

@@ -42,6 +42,7 @@ axiomatization and extraction to OCaml native integers.
 - Additional dependencies:
   - OCamlbuild
   - [MathComp](https://math-comp.github.io) 2.0 or later (`algebra` suffices)
+  - [MathComp Algebra Tactics](https://github.com/math-comp/algebra-tactics)
 - Coq namespace: `Bits`
 - Related publication(s):
   - [From Sets to Bits in Coq](https://hal.archives-ouvertes.fr/hal-01251943/document) doi:[10.1007/978-3-319-29604-3_2](https://doi.org/10.1007/978-3-319-29604-3_2)

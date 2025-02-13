@@ -1,6 +1,7 @@
  (*===========================================================================
   Proofs of properties of arithmetic and logical operations on n-bit words
   ===========================================================================*)
+From Coq Require Import Ring_theory.
 From HB Require Import structures.
 Require Import mathcomp.ssreflect.ssreflect.
 

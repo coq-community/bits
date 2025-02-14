@@ -21,6 +21,7 @@ depends: [
   "coq" {>= "8.16"}
   "ocamlbuild" 
   "coq-mathcomp-algebra" {>= "2.0"}
+  "coq-mathcomp-algebra-tactics"
 ]
 
 tags: [
